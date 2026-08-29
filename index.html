@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ইউনিয়ন ভোটার তালিকা</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f4f8; margin: 0; padding: 20px; color: #333; }
+        .pin-container { max-width: 400px; margin: 100px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); text-align: center; }
+        .pin-container input { width: 100%; padding: 12px; margin: 15px 0; font-size: 18px; border: 2px solid #3498db; border-radius: 8px; text-align: center; outline: none; }
+        .pin-container button { width: 100%; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; font-weight: bold; }
+        #pinError { color: #e74c3c; margin-top: 10px; display: none; font-weight: bold; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+        .back-btn, .settings-btn { color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold; }
+        .back-btn { background-color: #7f8c8d; }
+        .settings-btn { background-color: #f39c12; }
+        .settings-panel { display: none; background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #bdc3c7; }
+        .settings-panel label { font-size: 15px; font-weight: bold; cursor: pointer; display: block; margin-bottom: 10px; }
+        .stats-container { display: none; background: #eafaf1; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #2ecc71; text-align: center; }
+        .stat-badge { display: inline-block; background: #34495e; color: white; padding: 6px 12px; border-radius: 20px; margin: 5px; font-size: 13px; font-weight: bold; }
+        .village-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
+        .village-btn { background-color: #2c3e50; color: white; padding: 15px; font-size: 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; box-shadow: 0 3px 6px rgba(0,0,0,0.16); transition: all 0.3s ease; }
+        .village-btn:hover { background-color: #34495e; transform: translateY(-2px); }
+        .search-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .search-container input { width: 100%; padding: 12px 15px; font-size: 15px; border: 2px solid #3498db; border-radius: 8px; outline: none; }
+        .action-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px; }
+        .result-count { font-weight: bold; color: #27ae60; font-size: 15px; background: #eafaf1; padding: 10px 15px; border-radius: 8px; margin: 0; flex: 1; }
+        .clear-btn { padding: 10px 20px; background-color: #e74c3c; color: white; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; font-weight: bold; white-space: nowrap; }
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #3498db; color: white; white-space: nowrap; }
+        tr:hover { background-color: #f1f9ff; }
+        .no-data { text-align: center; color: #7f8c8d; font-weight: bold; padding: 20px; }
+        .gender-badge { font-size: 11px; background: #eee; padding: 2px 5px; border-radius: 4px; color: #555; }
+        
+        .action-btns { display: flex; gap: 5px; }
+        .copy-btn, .print-btn { color: white; border: none; padding: 6px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.3s; }
+        .copy-btn { background-color: #27ae60; }
+        .print-btn { background-color: #8e44ad; }
+        
+        #toast { visibility: hidden; min-width: 250px; margin-left: -125px; background-color: #333; color: #fff; text-align: center; border-radius: 5px; padding: 16px; position: fixed; z-index: 1; left: 50%; bottom: 30px; font-size: 15px; }
+        #toast.show { visibility: visible; -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        @-webkit-keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @-webkit-keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+        @media (max-width: 480px) { .result-count { font-size: 14px; padding: 10px; } .clear-btn { font-size: 14px; padding: 10px 15px; } .action-btns { flex-direction: column; } }
+    </style>
+</head>
+<body>
+
+    <div id="pinScreen" class="pin-container">
+        <h2>নিরাপত্তা যাচাই</h2>
+        <p>অ্যাপটি ওপেন করতে আপনার পিন কোড দিন</p>
+        <input type="password" id="pinInput" placeholder="এখানে পিন দিন">
+        <button onclick="checkPin()">প্রবেশ করুন</button>
+        <p id="pinError">ভুল পিন! আবার চেষ্টা করুন।</p>
+    </div>
+
+    <div id="homeScreen" class="container" style="display: none;">
+        <h2 style="margin-top: 0; color: #2c3e50;">আপনার গ্রাম নির্বাচন করুন</h2>
+        <div class="village-grid" id="villageButtons"></div>
+    </div>
+
+    <div id="searchScreen" class="container" style="display: none;">
+        <div class="header-row">
+            <button class="back-btn" onclick="goBack()">⬅ ফিরে যান</button>
+            <h2 id="villageTitle" style="margin: 0; color: #2c3e50;">গ্রামের ভোটার তালিকা</h2>
+            <button class="settings-btn" onclick="toggleSettings()">⚙️ অপশন</button>
+        </div>
+
+        <div class="settings-panel" id="settingsPanel">
+            <label><input type="checkbox" id="toggleFullList" onchange="applySettings()"> সম্পূর্ণ ভোটার তালিকা দেখান</label>
+            <label style="margin-bottom: 0;"><input type="checkbox" id="toggleStats" onchange="applySettings()"> পেশা ভিত্তিক পরিসংখ্যান দেখান</label>
+        </div>
+
+        <div class="stats-container" id="professionStats"></div>
+        
+        <div class="search-container">
+            <input type="text" id="searchName" onkeyup="searchVoters()" placeholder="নাম দিয়ে খুঁজুন...">
+            <input type="text" id="searchFather" onkeyup="searchVoters()" placeholder="পিতার নাম দিয়ে খুঁজুন...">
+            <input type="text" id="searchMother" onkeyup="searchVoters()" placeholder="মাতার নাম দিয়ে খুঁজুন...">
+            <input type="text" id="searchDob" onkeyup="searchVoters()" placeholder="জন্ম তারিখ (যেমন: ১৫/০২/১৯৮০)">
+        </div>
+        
+        <div class="action-row">
+            <div class="result-count" id="resultCount">অনুসন্ধান করতে বক্সে তথ্য দিন</div>
+            <button class="clear-btn" onclick="clearSearch()">সার্চ মুছে ফেলুন (Clear)</button>
+        </div>
+
+        <div class="table-container">
+            <table id="voterTable">
+                <thead>
+                    <tr>
+                        <th>ক্রমিক নং</th><th>ভোটারের নাম</th><th>জন্ম তারিখ</th><th>পিতার নাম</th><th>মাতার নাম</th><th>পেশা</th><th>ভোটার নং</th><th>ঠিকানা</th><th>অ্যাকশন</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="toast">মেসেজ</div>
+
+    <!-- ডাটা ফাইলটি কল করা হচ্ছে -->
+    <script src="data.js"></script>
+    
+    <script>
+        let currentVillageData = [];
+        let currentlyDisplayedData = []; 
+
+        function checkPin() {
+            const pin = document.getElementById('pinInput').value;
+            if (pin === "10448") {
+                document.getElementById('pinScreen').style.display = 'none';
+                document.getElementById('homeScreen').style.display = 'block';
+                setupVillages();
+            } else {
+                document.getElementById('pinError').style.display = 'block';
+            }
+        }
+
+        document.getElementById("pinInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") { event.preventDefault(); checkPin(); }
+        });
+
+        function setupVillages() {
+            const villageNames = Object.keys(allVotersData);
+            const grid = document.getElementById('villageButtons');
+            grid.innerHTML = ''; 
+            villageNames.forEach(village => {
+                const btn = document.createElement('button');
+                btn.className = 'village-btn';
+                btn.innerText = village + ` (${allVotersData[village].length})`;
+                btn.onclick = () => openVillage(village);
+                grid.appendChild(btn);
+            });
+        }
+
+        function openVillage(villageName) {
+            document.getElementById('homeScreen').style.display = 'none';
+            document.getElementById('searchScreen').style.display = 'block';
+            document.getElementById('villageTitle').innerText = `${villageName} - ভোটার তালিকা`;
+            currentVillageData = allVotersData[villageName];
+            document.getElementById('settingsPanel').style.display = 'none';
+            clearSearch(); 
+        }
+
+        function goBack() {
+            document.getElementById('searchScreen').style.display = 'none';
+            document.getElementById('homeScreen').style.display = 'block';
+        }
+
+        function toggleSettings() {
+            const panel = document.getElementById('settingsPanel');
+            panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'block' : 'none';
+        }
+
+        function applySettings() {
+            const showFullList = document.getElementById('toggleFullList').checked;
+            const showStats = document.getElementById('toggleStats').checked;
+
+            if(showStats) renderProfessionStats();
+            else document.getElementById('professionStats').style.display = 'none';
+
+            const isSearchEmpty = ['searchName', 'searchFather', 'searchMother', 'searchDob'].every(id => document.getElementById(id).value.trim() === '');
+            
+            if(isSearchEmpty) {
+                if(showFullList) displayVoters(currentVillageData);
+                else { displayVoters([]); document.getElementById('resultCount').innerText = "অনুসন্ধান করতে বক্সে তথ্য দিন"; }
+            } else {
+                searchVoters();
+            }
+        }
+
+        function renderProfessionStats() {
+            const statsDiv = document.getElementById('professionStats');
+            statsDiv.style.display = 'block';
+            if(currentVillageData.length === 0){
+                statsDiv.innerHTML = "<h3>এই গ্রামের কোনো ডাটা নেই</h3>"; return;
+            }
+            const counts = {};
+            currentVillageData.forEach(v => {
+                let prof = v.profession ? v.profession.trim() : '';
+                if(prof === '' || prof === 'nan') prof = 'পেশা দেওয়া নেই';
+                counts[prof] = (counts[prof] || 0) + 1;
+            });
+            let html = '<h3>এই গ্রামের পেশা ভিত্তিক পরিসংখ্যান:</h3><div>';
+            for (let prof in counts) html += `<span class="stat-badge">${prof}: ${counts[prof]} জন</span>`;
+            statsDiv.innerHTML = html + '</div>';
+        }
+
+        function displayVoters(data) {
+            const tbody = document.getElementById('tableBody');
+            currentlyDisplayedData = data; 
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="no-data">কোনো তথ্য দেখানো হচ্ছে না</td></tr>';
+                return;
+            }
+
+            document.getElementById('resultCount').innerText = `পাওয়া গেছে: ${data.length} জন`;
+            let htmlString = '';
+            data.forEach((voter, index) => {
+                htmlString += `
+                    <tr>
+                        <td><b>${voter.serialNo || '-'}</b></td>
+                        <td>${voter.name || '-'} <br><span class="gender-badge">${voter.gender || '-'}</span></td>
+                        <td>${voter.dob || '-'}</td>
+                        <td>${voter.fatherName || '-'}</td>
+                        <td>${voter.motherName || '-'}</td>
+                        <td>${voter.profession || '-'}</td>
+                        <td>${voter.voterId || '-'}</td>
+                        <td>${voter.address || '-'}</td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="copy-btn" onclick="copyVoter(${index})">কপি</button>
+                                <button class="print-btn" onclick="printVoter(${index})">প্রিন্ট</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = htmlString;
+        }
+
+        function searchVoters() {
+            const queries = ['searchName', 'searchFather', 'searchMother', 'searchDob'].map(id => document.getElementById(id).value.toLowerCase().trim());
+            const isSearchEmpty = queries.every(q => q === '');
+            const showFullList = document.getElementById('toggleFullList').checked;
+
+            if (isSearchEmpty) {
+                showFullList ? displayVoters(currentVillageData) : (displayVoters([]), document.getElementById('resultCount').innerText = `অনুসন্ধান করতে বক্সে তথ্য দিন`);
+                return;
+            }
+
+            const filteredData = currentVillageData.filter(voter => {
+                const vals = [(voter.name || '').toLowerCase(), (voter.fatherName || '').toLowerCase(), (voter.motherName || '').toLowerCase(), (voter.dob || '').toLowerCase()];
+                return queries.every((q, i) => vals[i].includes(q));
+            });
+
+            if(filteredData.length === 0) document.getElementById('resultCount').innerText = `কোনো ভোটার পাওয়া যায়নি`;
+            displayVoters(filteredData);
+        }
+
+        function clearSearch() {
+            ['searchName', 'searchFather', 'searchMother', 'searchDob'].forEach(id => document.getElementById(id).value = '');
+            applySettings(); 
+        }
+
+        function copyVoter(index) {
+            const voter = currentlyDisplayedData[index];
+            const textToCopy = `ক্রমিক নং: ${voter.serialNo || '-'}\nনাম: ${voter.name || '-'} (${voter.gender || '-'})\nজন্ম তারিখ: ${voter.dob || '-'}\nপিতার নাম: ${voter.fatherName || '-'}\nমাতার নাম: ${voter.motherName || '-'}\nপেশা: ${voter.profession || '-'}\nভোটার নং: ${voter.voterId || '-'}\nঠিকানা: ${voter.address || '-'}`;
+            
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(textToCopy).then(() => showToast("ভোটারের তথ্য কপি হয়েছে!")).catch(() => fallbackCopy(textToCopy));
+            } else { fallbackCopy(textToCopy); }
+        }
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed"; document.body.appendChild(textArea);
+            textArea.focus(); textArea.select();
+            try { document.execCommand('copy') ? showToast("ভোটারের তথ্য কপি হয়েছে!") : alert("কপি করা সম্ভব হয়নি!"); } 
+            catch (err) { alert("কপি সাপোর্ট করছে না!"); }
+            document.body.removeChild(textArea);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById("toast");
+            toast.innerText = msg;
+            toast.className = "show";
+            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        function printVoter(index) {
+            const voter = currentlyDisplayedData[index];
+            const printHTML = `
+                <!DOCTYPE html>
+                <html lang="bn">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>প্রিন্ট - ${voter.name || 'Voter'}</title>
+                    <style>
+                        body { font-family: 'Arial', sans-serif; padding: 20px; color: #000; }
+                        .print-card { border: 2px solid #333; border-radius: 10px; padding: 20px; max-width: 600px; margin: auto; }
+                        h2 { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-top: 0; }
+                        table { width: 100%; border-collapse: collapse; font-size: 18px; margin-top: 15px; }
+                        td { padding: 8px 0; }
+                    </style>
+                </head>
+                <body>
+                    <div class="print-card">
+                        <h2>ভোটার তথ্য</h2>
+                        <table>
+                            <tr><td style="width: 130px;"><b>ক্রমিক নং:</b></td><td>${voter.serialNo || '-'}</td></tr>
+                            <tr><td><b>নাম:</b></td><td>${voter.name || '-'} (${voter.gender || '-'})</td></tr>
+                            <tr><td><b>জন্ম তারিখ:</b></td><td>${voter.dob || '-'}</td></tr>
+                            <tr><td><b>পিতার নাম:</b></td><td>${voter.fatherName || '-'}</td></tr>
+                            <tr><td><b>মাতার নাম:</b></td><td>${voter.motherName || '-'}</td></tr>
+                            <tr><td><b>পেশা:</b></td><td>${voter.profession || '-'}</td></tr>
+                            <tr><td><b>ভোটার নং:</b></td><td>${voter.voterId || '-'}</td></tr>
+                            <tr><td><b>ঠিকানা:</b></td><td>${voter.address || '-'}</td></tr>
+                        </table>
+                    </div>
+                    <script>
+                        window.onload = function() { window.print(); }
+                    <\/script>
+                </body>
+                </html>
+            `;
+
+            let printIframe = document.getElementById('printIframe');
+            if (!printIframe) {
+                printIframe = document.createElement('iframe');
+                printIframe.id = 'printIframe';
+                printIframe.style.position = 'absolute';
+                printIframe.style.width = '0px';
+                printIframe.style.height = '0px';
+                printIframe.style.border = 'none';
+                document.body.appendChild(printIframe);
+            }
+            const iframeDoc = printIframe.contentWindow.document;
+            iframeDoc.open();
+            iframeDoc.write(printHTML);
+            iframeDoc.close();
+            showToast("প্রিন্ট লোড হচ্ছে...");
+        }
+    </script>
+</body>
+</html>
