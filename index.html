@@ -4,14 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ইউনিয়ন ভোটার তালিকা</title>
+    <!-- ব্রাউজার ট্যাবের আইকন (Favicon) -->
+    <link rel="icon" href="logo.png" type="image/png">
+    
     <style>
         * { box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f4f8; margin: 0; padding: 20px; color: #333; }
+        
+        .app-logo { width: 80px; height: 80px; object-fit: cover; border-radius: 50%; margin-bottom: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .header-logo { width: 40px; height: 40px; object-fit: cover; border-radius: 50%; vertical-align: middle; margin-right: 10px; }
+
         .pin-container { max-width: 400px; margin: 100px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); text-align: center; }
         .pin-container input { width: 100%; padding: 12px; margin: 15px 0; font-size: 18px; border: 2px solid #3498db; border-radius: 8px; text-align: center; outline: none; }
         .pin-container button { width: 100%; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; font-weight: bold; }
         #pinError { color: #e74c3c; margin-top: 10px; display: none; font-weight: bold; }
         .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
+        .home-header { text-align: center; margin-bottom: 20px; }
+
         .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
         .back-btn, .settings-btn { color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold; }
         .back-btn { background-color: #7f8c8d; }
@@ -53,6 +63,8 @@
 <body>
 
     <div id="pinScreen" class="pin-container">
+        <!-- লোগো ইমেজ -->
+        <img src="logo.png" alt="App Logo" class="app-logo" onerror="this.style.display='none'">
         <h2>নিরাপত্তা যাচাই</h2>
         <p>অ্যাপটি ওপেন করতে আপনার পিন কোড দিন</p>
         <input type="password" id="pinInput" placeholder="এখানে পিন দিন">
@@ -61,14 +73,22 @@
     </div>
 
     <div id="homeScreen" class="container" style="display: none;">
-        <h2 style="margin-top: 0; color: #2c3e50;">আপনার গ্রাম নির্বাচন করুন</h2>
+        <div class="home-header">
+            <!-- হোম পেজের লোগো -->
+            <img src="logo.png" alt="App Logo" class="app-logo" onerror="this.style.display='none'">
+            <h2 style="margin-top: 0; color: #2c3e50;">আপনার গ্রাম নির্বাচন করুন</h2>
+        </div>
         <div class="village-grid" id="villageButtons"></div>
     </div>
 
     <div id="searchScreen" class="container" style="display: none;">
         <div class="header-row">
             <button class="back-btn" onclick="goBack()">⬅ ফিরে যান</button>
-            <h2 id="villageTitle" style="margin: 0; color: #2c3e50;">গ্রামের ভোটার তালিকা</h2>
+            <h2 style="margin: 0; color: #2c3e50; display: flex; align-items: center;">
+                <!-- সার্চ পেজের ছোট লোগো -->
+                <img src="logo.png" alt="App Logo" class="header-logo" onerror="this.style.display='none'">
+                <span id="villageTitle">গ্রামের ভোটার তালিকা</span>
+            </h2>
             <button class="settings-btn" onclick="toggleSettings()">⚙️ অপশন</button>
         </div>
 
@@ -105,9 +125,27 @@
 
     <div id="toast">মেসেজ</div>
 
-    <!-- ডাটা ফাইলটি কল করা হচ্ছে -->
-    <script src="data.js"></script>
+
+    <!-- ========================================================= -->
+    <!-- নিচের এই অংশটি ডাটা ফাইল কল করার জন্য ব্যবহার করা হয়েছে -->
+    <!-- ========================================================= -->
     
+    <script>
+        // গ্লোবাল ডাটা স্টোর (এটি ডিলিট করবেন না)
+        const allVotersData = {};
+    </script>
+
+    <!-- আপনার প্রতিটি গ্রামের ফাইল এখানে নিচে নিচে অ্যাড করবেন -->
+    <script src="pathamara.js"></script>
+    
+    <!-- নতুন গ্রাম অ্যাড করতে চাইলে ঠিক ওপরের লাইনের মতো করে ফাইলের নাম লিখে দিন -->
+    <!-- যেমন: -->
+    <!-- <script src="chotobadura.js"></script> -->
+    <!-- <script src="shorifpur.js"></script> -->
+
+    <!-- ========================================================= -->
+
+
     <script>
         let currentVillageData = [];
         let currentlyDisplayedData = []; 
@@ -131,10 +169,12 @@
             const villageNames = Object.keys(allVotersData);
             const grid = document.getElementById('villageButtons');
             grid.innerHTML = ''; 
+            
             villageNames.forEach(village => {
+                const dataArray = allVotersData[village] || [];
                 const btn = document.createElement('button');
                 btn.className = 'village-btn';
-                btn.innerText = village + ` (${allVotersData[village].length})`;
+                btn.innerText = village + ` (${dataArray.length})`;
                 btn.onclick = () => openVillage(village);
                 grid.appendChild(btn);
             });
@@ -144,7 +184,7 @@
             document.getElementById('homeScreen').style.display = 'none';
             document.getElementById('searchScreen').style.display = 'block';
             document.getElementById('villageTitle').innerText = `${villageName} - ভোটার তালিকা`;
-            currentVillageData = allVotersData[villageName];
+            currentVillageData = allVotersData[villageName] || [];
             document.getElementById('settingsPanel').style.display = 'none';
             clearSearch(); 
         }
@@ -162,12 +202,10 @@
         function applySettings() {
             const showFullList = document.getElementById('toggleFullList').checked;
             const showStats = document.getElementById('toggleStats').checked;
-
-            if(showStats) renderProfessionStats();
-            else document.getElementById('professionStats').style.display = 'none';
+            if(showStats) { renderProfessionStats(); } 
+            else { document.getElementById('professionStats').style.display = 'none'; }
 
             const isSearchEmpty = ['searchName', 'searchFather', 'searchMother', 'searchDob'].every(id => document.getElementById(id).value.trim() === '');
-            
             if(isSearchEmpty) {
                 if(showFullList) displayVoters(currentVillageData);
                 else { displayVoters([]); document.getElementById('resultCount').innerText = "অনুসন্ধান করতে বক্সে তথ্য দিন"; }
@@ -196,33 +234,29 @@
         function displayVoters(data) {
             const tbody = document.getElementById('tableBody');
             currentlyDisplayedData = data; 
-
             if (data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="9" class="no-data">কোনো তথ্য দেখানো হচ্ছে না</td></tr>';
                 return;
             }
-
             document.getElementById('resultCount').innerText = `পাওয়া গেছে: ${data.length} জন`;
             let htmlString = '';
             data.forEach((voter, index) => {
-                htmlString += `
-                    <tr>
-                        <td><b>${voter.serialNo || '-'}</b></td>
-                        <td>${voter.name || '-'} <br><span class="gender-badge">${voter.gender || '-'}</span></td>
-                        <td>${voter.dob || '-'}</td>
-                        <td>${voter.fatherName || '-'}</td>
-                        <td>${voter.motherName || '-'}</td>
-                        <td>${voter.profession || '-'}</td>
-                        <td>${voter.voterId || '-'}</td>
-                        <td>${voter.address || '-'}</td>
-                        <td>
-                            <div class="action-btns">
-                                <button class="copy-btn" onclick="copyVoter(${index})">কপি</button>
-                                <button class="print-btn" onclick="printVoter(${index})">প্রিন্ট</button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
+                htmlString += `<tr>
+                    <td><b>${voter.serialNo || '-'}</b></td>
+                    <td>${voter.name || '-'} <br><span class="gender-badge">${voter.gender || '-'}</span></td>
+                    <td>${voter.dob || '-'}</td>
+                    <td>${voter.fatherName || '-'}</td>
+                    <td>${voter.motherName || '-'}</td>
+                    <td>${voter.profession || '-'}</td>
+                    <td>${voter.voterId || '-'}</td>
+                    <td>${voter.address || '-'}</td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="copy-btn" onclick="copyVoter(${index})">কপি</button>
+                            <button class="print-btn" onclick="printVoter(${index})">প্রিন্ট</button>
+                        </div>
+                    </td>
+                </tr>`;
             });
             tbody.innerHTML = htmlString;
         }
@@ -230,18 +264,14 @@
         function searchVoters() {
             const queries = ['searchName', 'searchFather', 'searchMother', 'searchDob'].map(id => document.getElementById(id).value.toLowerCase().trim());
             const isSearchEmpty = queries.every(q => q === '');
-            const showFullList = document.getElementById('toggleFullList').checked;
-
             if (isSearchEmpty) {
-                showFullList ? displayVoters(currentVillageData) : (displayVoters([]), document.getElementById('resultCount').innerText = `অনুসন্ধান করতে বক্সে তথ্য দিন`);
+                document.getElementById('toggleFullList').checked ? displayVoters(currentVillageData) : (displayVoters([]), document.getElementById('resultCount').innerText = `অনুসন্ধান করতে বক্সে তথ্য দিন`);
                 return;
             }
-
             const filteredData = currentVillageData.filter(voter => {
                 const vals = [(voter.name || '').toLowerCase(), (voter.fatherName || '').toLowerCase(), (voter.motherName || '').toLowerCase(), (voter.dob || '').toLowerCase()];
                 return queries.every((q, i) => vals[i].includes(q));
             });
-
             if(filteredData.length === 0) document.getElementById('resultCount').innerText = `কোনো ভোটার পাওয়া যায়নি`;
             displayVoters(filteredData);
         }
@@ -254,7 +284,6 @@
         function copyVoter(index) {
             const voter = currentlyDisplayedData[index];
             const textToCopy = `ক্রমিক নং: ${voter.serialNo || '-'}\nনাম: ${voter.name || '-'} (${voter.gender || '-'})\nজন্ম তারিখ: ${voter.dob || '-'}\nপিতার নাম: ${voter.fatherName || '-'}\nমাতার নাম: ${voter.motherName || '-'}\nপেশা: ${voter.profession || '-'}\nভোটার নং: ${voter.voterId || '-'}\nঠিকানা: ${voter.address || '-'}`;
-            
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(textToCopy).then(() => showToast("ভোটারের তথ্য কপি হয়েছে!")).catch(() => fallbackCopy(textToCopy));
             } else { fallbackCopy(textToCopy); }
