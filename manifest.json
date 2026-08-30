@@ -1,0 +1,20 @@
+{
+  "name": "ইউনিয়ন ভোটার তালিকা",
+  "short_name": "ভোটার তালিকা",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f0f4f8",
+  "theme_color": "#3498db",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
