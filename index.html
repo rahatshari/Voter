@@ -31,7 +31,8 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans Bengali', system-ui, sans-serif; }
         
-        body { background-color: var(--bg); color: var(--text-main); padding: 10px; line-height: 1.4; }
+        /* Pull-to-refresh বন্ধ করার জন্য overscroll-behavior-y ব্যবহার করা হয়েছে */
+        html, body { overscroll-behavior-y: none; background-color: var(--bg); color: var(--text-main); padding: 10px; line-height: 1.4; }
         
         .app-logo { width: 70px; height: 70px; object-fit: cover; border-radius: 50%; margin-bottom: 10px; box-shadow: var(--shadow-soft); border: 2px solid white; }
         .header-logo { width: 35px; height: 35px; object-fit: cover; border-radius: 50%; vertical-align: middle; margin-right: 8px; border: 2px solid white; }
@@ -71,7 +72,7 @@
         .result-count { font-weight: 700; color: var(--success); font-size: 13px; background: #ecfdf5; padding: 8px 12px; border-radius: 6px; margin: 0; flex: 1; border: 1px solid #a7f3d0; }
         .clear-btn { padding: 8px 15px; background-color: #fee2e2; color: var(--danger); border: 1px solid #fecaca; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 700; }
 
-        /* New Card Layout instead of Table */
+        /* Card Layout */
         .voter-list-container { display: flex; flex-direction: column; gap: 12px; }
         .voter-card { background: white; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         .voter-card-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px dashed var(--border); padding-bottom: 10px; margin-bottom: 10px; }
@@ -126,9 +127,9 @@
             <button class="settings-btn-dots" onclick="toggleSettings()">⋮</button>
         </div>
 
-        <!-- অপশন প্যানেল (লুকানো থাকবে, ডটে ক্লিক করলে বের হবে) -->
+        <!-- অপশন প্যানেল -->
         <div class="settings-panel" id="settingsPanel">
-            <label><input type="checkbox" id="toggleFullList" onchange="applySettings()"> সম্পূর্ণ ভোটার তালিকা দেখান</label>
+            <label><input type="checkbox" id="toggleFullList" onchange="applySettings()"> সম্পূর্ণ ভোটার তালিকা দেখান (বিনা সার্চে)</label>
             <label style="margin-bottom: 0;"><input type="checkbox" id="toggleStats" onchange="applySettings()"> পেশা ভিত্তিক পরিসংখ্যান দেখান</label>
         </div>
 
@@ -146,7 +147,6 @@
             <button class="clear-btn" onclick="clearSearch()">মুছে ফেলুন</button>
         </div>
 
-        <!-- টেবিলের বদলে কার্ড কন্টেইনার -->
         <div class="voter-list-container" id="voterListContainer">
             <!-- ভোটারদের কার্ড এখানে জাভাস্ক্রিপ্ট দিয়ে তৈরি হবে -->
         </div>
@@ -156,30 +156,52 @@
 
 
     <!-- ========================================================= -->
+    <!-- নিচের এই অংশে ৯টি গ্রামের ডাটা ফাইল অ্যাড করার জায়গা আছে -->
+    <!-- ========================================================= -->
+    
     <script>
+        // গ্লোবাল ডাটা স্টোর (এটি ডিলিট করবেন না)
         const allVotersData = {};
     </script>
 
-    <!-- আপনার প্রতিটি গ্রামের ফাইল এখানে নিচে নিচে অ্যাড করবেন -->
+    <!-- ১ নম্বর গ্রাম (এটি আপলোড করা আছে) -->
     <script src="pathamara.js"></script>
     
+    <!-- ২ নম্বর গ্রাম -->
     <!-- <script src="gram2.js"></script> -->
+    
+    <!-- ৩ নম্বর গ্রাম -->
     <!-- <script src="gram3.js"></script> -->
+    
+    <!-- ৪ নম্বর গ্রাম -->
     <!-- <script src="gram4.js"></script> -->
+    
+    <!-- ৫ নম্বর গ্রাম -->
     <!-- <script src="gram5.js"></script> -->
+    
+    <!-- ৬ নম্বর গ্রাম -->
     <!-- <script src="gram6.js"></script> -->
+    
+    <!-- ৭ নম্বর গ্রাম -->
     <!-- <script src="gram7.js"></script> -->
+    
+    <!-- ৮ নম্বর গ্রাম -->
     <!-- <script src="gram8.js"></script> -->
+    
+    <!-- ৯ নম্বর গ্রাম -->
     <!-- <script src="gram9.js"></script> -->
+
     <!-- ========================================================= -->
 
     <script>
         let currentVillageData = [];
         let currentlyDisplayedData = []; 
         let isSearchScreenActive = false;
+        let activeVillage = "";
 
         window.onload = function() {
             setupVillages();
+            restoreAppState(); // অটো সেভ ডাটা চেক করবে
         };
 
         // মোবাইলের ব্যাক বাটন সাপোর্ট
@@ -189,13 +211,53 @@
             }
         });
 
+        // ================== অটো সেভ সিস্টেম ==================
+        function saveAppState() {
+            const state = {
+                activeVillage: activeVillage,
+                search: {
+                    name: document.getElementById('searchName').value,
+                    father: document.getElementById('searchFather').value,
+                    mother: document.getElementById('searchMother').value,
+                    dob: document.getElementById('searchDob').value
+                },
+                settings: {
+                    fullList: document.getElementById('toggleFullList').checked,
+                    stats: document.getElementById('toggleStats').checked
+                }
+            };
+            localStorage.setItem('voterAppSavedState', JSON.stringify(state));
+        }
+
+        function restoreAppState() {
+            const saved = localStorage.getItem('voterAppSavedState');
+            if (saved) {
+                try {
+                    const state = JSON.parse(saved);
+                    if (state.activeVillage && allVotersData[state.activeVillage]) {
+                        
+                        document.getElementById('searchName').value = state.search.name || '';
+                        document.getElementById('searchFather').value = state.search.father || '';
+                        document.getElementById('searchMother').value = state.search.mother || '';
+                        document.getElementById('searchDob').value = state.search.dob || '';
+                        
+                        document.getElementById('toggleFullList').checked = state.settings.fullList || false;
+                        document.getElementById('toggleStats').checked = state.settings.stats || false;
+                        
+                        openVillage(state.activeVillage, true);
+                    }
+                } catch(e) {}
+            }
+        }
+        // ===================================================
+
         function setupVillages() {
             const villageNames = Object.keys(allVotersData);
             const grid = document.getElementById('villageButtons');
             grid.innerHTML = ''; 
             
             if (villageNames.length === 0) {
-                grid.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color: #ef4444; font-weight: bold;'>কোনো গ্রামের ডাটা যোগ করা হয়নি।</p>";
+                grid.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color: #ef4444; font-weight: bold; padding: 40px;'>এখনো কোনো গ্রামের ডাটা যোগ করা হয়নি।</p>";
                 return;
             }
             
@@ -203,29 +265,39 @@
                 const dataArray = allVotersData[village] || [];
                 const btn = document.createElement('button');
                 btn.className = 'village-btn';
-                btn.innerHTML = `<span>${village}</span> <span style="font-size: 12px; background: #e2e8f0; padding: 2px 10px; border-radius: 12px;">${dataArray.length} জন</span>`;
-                btn.onclick = () => openVillage(village);
+                btn.innerHTML = `<span style="font-size: 22px;">📍</span> ${village} <span style="font-size: 14px; background: #e2e8f0; padding: 4px 12px; border-radius: 20px; color: #475569; margin-top: 5px;">${dataArray.length} জন</span>`;
+                btn.onclick = () => {
+                    history.pushState({page: 'search'}, 'Search', '#search');
+                    openVillage(village);
+                };
                 grid.appendChild(btn);
             });
         }
 
-        function openVillage(villageName) {
+        function openVillage(villageName, isRestoring = false) {
             document.getElementById('homeScreen').style.display = 'none';
             document.getElementById('searchScreen').style.display = 'block';
             document.getElementById('villageTitle').innerText = `${villageName} - তালিকা`;
             currentVillageData = allVotersData[villageName] || [];
             document.getElementById('settingsPanel').style.display = 'none';
-            clearSearch(); 
             
-            // ব্যাক বাটনের জন্য হিস্ট্রি পুশ করা
+            activeVillage = villageName;
             isSearchScreenActive = true;
-            history.pushState({page: 'search'}, 'Search', '#search');
+            
+            if (!isRestoring) {
+                clearSearch(true); 
+            } else {
+                applySettings(true); 
+            }
+            saveAppState();
         }
 
         function goBackLogic() {
             document.getElementById('searchScreen').style.display = 'none';
             document.getElementById('homeScreen').style.display = 'block';
             isSearchScreenActive = false;
+            activeVillage = ""; // হোম স্ক্রিনে আসলে সেভ ডাটা ক্লিয়ার হবে
+            saveAppState();
         }
 
         function toggleSettings() {
@@ -233,7 +305,7 @@
             panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'block' : 'none';
         }
 
-        function applySettings() {
+        function applySettings(skipSave = false) {
             const showFullList = document.getElementById('toggleFullList').checked;
             const showStats = document.getElementById('toggleStats').checked;
             if(showStats) { renderProfessionStats(); } 
@@ -241,23 +313,28 @@
 
             const isSearchEmpty = ['searchName', 'searchFather', 'searchMother', 'searchDob'].every(id => document.getElementById(id).value.trim() === '');
             if(isSearchEmpty) {
-                if(showFullList) displayVoters(currentVillageData);
-                else { displayVoters([]); document.getElementById('resultCount').innerHTML = "✨ বক্সে তথ্য দিন"; }
+                if(showFullList) {
+                    displayVoters(currentVillageData);
+                } else {
+                    displayVoters([]); 
+                    document.getElementById('resultCount').innerHTML = "✨ অনুসন্ধান করতে ওপরের বক্সে তথ্য দিন";
+                }
             } else {
-                searchVoters();
+                searchVotersLogic();
             }
+            if(!skipSave) saveAppState();
         }
 
         function renderProfessionStats() {
             const statsDiv = document.getElementById('professionStats');
             statsDiv.style.display = 'block';
             if(currentVillageData.length === 0){
-                statsDiv.innerHTML = "<h3>ডাটা নেই</h3>"; return;
+                statsDiv.innerHTML = "<h3>এই গ্রামের কোনো ডাটা নেই</h3>"; return;
             }
             const counts = {};
             currentVillageData.forEach(v => {
                 let prof = v.profession ? v.profession.trim() : '';
-                if(prof === '' || prof === 'nan') prof = 'দেওয়া নেই';
+                if(prof === '' || prof === 'nan') prof = 'পেশা দেওয়া নেই';
                 counts[prof] = (counts[prof] || 0) + 1;
             });
             let html = '<h3 style="font-size:14px; margin-bottom:8px;">📊 পেশা ভিত্তিক পরিসংখ্যান:</h3><div>';
@@ -265,7 +342,6 @@
             statsDiv.innerHTML = html + '</div>';
         }
 
-        // কার্ড ডিজাইনে ভোটার শো করানো
         function displayVoters(data) {
             const container = document.getElementById('voterListContainer');
             currentlyDisplayedData = data; 
@@ -303,23 +379,37 @@
             container.innerHTML = htmlString;
         }
 
-        function searchVoters() {
+        function searchVotersLogic() {
             const queries = ['searchName', 'searchFather', 'searchMother', 'searchDob'].map(id => document.getElementById(id).value.toLowerCase().trim());
             const isSearchEmpty = queries.every(q => q === '');
             if (isSearchEmpty) {
-                document.getElementById('toggleFullList').checked ? displayVoters(currentVillageData) : (displayVoters([]), document.getElementById('resultCount').innerHTML = `✨ বক্সে তথ্য দিন`);
+                if (document.getElementById('toggleFullList').checked) {
+                    displayVoters(currentVillageData);
+                } else {
+                    displayVoters([]); 
+                    document.getElementById('resultCount').innerHTML = `✨ অনুসন্ধান করতে ওপরের বক্সে তথ্য দিন`;
+                }
                 return;
             }
             const filteredData = currentVillageData.filter(voter => {
                 const vals = [(voter.name || '').toLowerCase(), (voter.fatherName || '').toLowerCase(), (voter.motherName || '').toLowerCase(), (voter.dob || '').toLowerCase()];
                 return queries.every((q, i) => vals[i].includes(q));
             });
+            
+            if(filteredData.length === 0) {
+                document.getElementById('resultCount').innerHTML = `কোনো ভোটার পাওয়া যায়নি ❌`;
+            }
             displayVoters(filteredData);
         }
 
-        function clearSearch() {
+        function searchVoters() {
+            searchVotersLogic();
+            saveAppState();
+        }
+
+        function clearSearch(skipSave = false) {
             ['searchName', 'searchFather', 'searchMother', 'searchDob'].forEach(id => document.getElementById(id).value = '');
-            applySettings(); 
+            applySettings(skipSave); 
         }
 
         function copyVoter(index) {
