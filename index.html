@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>লগইন - ভোটার অনুসন্ধান</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f7f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .login-container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 350px;
+      text-align: center;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button.signup {
+      background: #007bff;
+    }
+    #message {
+      margin-top: 15px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <h2>লগইন প্যানেল</h2>
+    <input type="email" id="email" placeholder="আপনার ইমেইল" required>
+    <input type="password" id="password" placeholder="আপনার পাসওয়ার্ড" required>
+    
+    <button id="loginBtn">লগইন করুন</button>
+    <button id="signupBtn" class="signup">নতুন একাউন্ট খুলুন</button>
+    
+    <div id="message"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getDatabase } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDSE5kxWXULnlTB2sOY7AE6MLFLmHuguWg", /*[cite: 1]*/
+      projectId: "voter-apps-14962", /*[cite: 1]*/
+      databaseURL: "https://voter-apps-14962-default-rtdb.firebaseio.com", /*[cite: 1]*/
+      storageBucket: "voter-apps-14962.firebasestorage.app", /*[cite: 1]*/
+      appId: "1:957567395353:android:84aad0acdb14a8a343ec88" /*[cite: 1]*/
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const database = getDatabase(app); 
+
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const message = document.getElementById('message');
+
+    // লগইন ফাংশন এবং রিডাইরেক্ট
+    document.getElementById('loginBtn').addEventListener('click', () => {
+      signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
+        .then((userCredential) => {
+          message.style.color = "green";
+          message.innerText = "লগইন সফল হয়েছে! মূল অ্যাপে প্রবেশ করা হচ্ছে...";
+          
+          // লগইন সফল হলে search.html পেজে চলে যাবে
+          setTimeout(() => {
+            window.location.href = "search.html";
+          }, 1000); // ১ সেকেন্ড পর রিডাইরেক্ট হবে যাতে মেসেজটি পড়া যায়
+        })
+        .catch((error) => {
+          message.style.color = "red";
+          message.innerText = "ভুল ইমেইল বা পাসওয়ার্ড।";
+        });
+    });
+
+    // নতুন একাউন্ট খোলার ফাংশন
+    document.getElementById('signupBtn').addEventListener('click', () => {
+      createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
+        .then((userCredential) => {
+          message.style.color = "green";
+          message.innerText = "একাউন্ট সফলভাবে তৈরি হয়েছে! এখন লগইন করুন।";
+        })
+        .catch((error) => {
+          message.style.color = "red";
+          message.innerText = "একাউন্ট তৈরি করতে সমস্যা হয়েছে (পাসওয়ার্ড অন্তত ৬ অক্ষরের হতে হবে)।";
+        });
+    });
+  </script>
+</body>
+</html>
