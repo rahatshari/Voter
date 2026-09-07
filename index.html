@@ -70,7 +70,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // আপনার ফায়ারবেস কনফিগারেশন
+        // ফায়ারবেস কনফিগারেশন (আপনার দেওয়া তথ্য অনুযায়ী)
         const firebaseConfig = {
             apiKey: "AIzaSyDSE5kxWXULnlTB2sOY7AE6MLFLmHuguWg",
             authDomain: "voter-apps-14962.firebaseapp.com",
@@ -100,8 +100,7 @@
             signInWithEmailAndPassword(auth, email, password)
                 .then((userCredential) => {
                     alert("লগইন সফল হয়েছে!");
-                    // লগইন সফল হলে ড্যাশবোর্ডে যাওয়ার জন্য নিচের লাইনে আপনার ফাইলের নাম দিন
-                    // window.location.href = "dashboard.html"; 
+                    window.location.href = "search.html"; // search.html পেজে নিয়ে যাবে
                 })
                 .catch((error) => {
                     alert("লগইন ব্যর্থ হয়েছে। ইমেইল বা পাসওয়ার্ড ভুল হতে পারে।");
@@ -113,7 +112,7 @@
             signInWithPopup(auth, provider)
                 .then((result) => {
                     alert("গুগল লগইন সফল হয়েছে!");
-                    // window.location.href = "dashboard.html";
+                    window.location.href = "search.html"; // search.html পেজে নিয়ে যাবে
                 })
                 .catch((error) => {
                     alert("গুগল লগইন বাতিল করা হয়েছে বা ব্যর্থ হয়েছে।");
