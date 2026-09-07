@@ -5,157 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>লগইন প্যানেল</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: #f4f7f6;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .login-card {
-            background: #ffffff;
-            width: 100%;
-            max-width: 400px;
-            padding: 40px 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            margin: 20px;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .header h2 {
-            color: #333;
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
-
-        .header p {
-            color: #777;
-            font-size: 14px;
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 14px 15px;
-            border: 1.5px solid #e1e1e1;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            outline: none;
-        }
-
-        .input-group input:focus {
-            border-color: #1a73e8;
-            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
-        }
-
-        .forgot-pass {
-            text-align: right;
-            margin-top: -10px;
-            margin-bottom: 20px;
-        }
-
-        .forgot-pass a {
-            color: #1a73e8;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .forgot-pass a:hover {
-            text-decoration: underline;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .btn-primary {
-            background-color: #1a73e8;
-            color: white;
-            box-shadow: 0 4px 10px rgba(26, 115, 232, 0.3);
-        }
-
-        .btn-primary:hover {
-            background-color: #1557b0;
-        }
-
-        .divider {
-            display: flex;
-            align-items: center;
-            text-align: center;
-            margin: 25px 0;
-            color: #999;
-            font-size: 14px;
-        }
-
-        .divider::before, .divider::after {
-            content: '';
-            flex: 1;
-            border-bottom: 1px solid #eee;
-        }
-
-        .divider span {
-            padding: 0 10px;
-        }
-
-        .btn-google {
-            background-color: white;
-            color: #444;
-            border: 1px solid #ddd;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn-google:hover {
-            background-color: #f8f9fa;
-        }
-
-        .btn-google img {
-            width: 20px;
-        }
-
-        .signup-link {
-            text-align: center;
-            margin-top: 25px;
-            font-size: 14px;
-            color: #555;
-        }
-
-        .signup-link a {
-            color: #1a73e8;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .signup-link a:hover {
-            text-decoration: underline;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .login-card { background: #ffffff; width: 100%; max-width: 400px; padding: 40px 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); margin: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h2 { color: #333; font-size: 24px; margin-bottom: 5px; }
+        .header p { color: #777; font-size: 14px; }
+        .input-group { margin-bottom: 20px; }
+        .input-group input { width: 100%; padding: 14px 15px; border: 1.5px solid #e1e1e1; border-radius: 10px; font-size: 16px; transition: all 0.3s ease; outline: none; }
+        .input-group input:focus { border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1); }
+        .forgot-pass { text-align: right; margin-top: -10px; margin-bottom: 20px; }
+        .forgot-pass a { color: #1a73e8; text-decoration: none; font-size: 14px; font-weight: 500; cursor: pointer; }
+        .forgot-pass a:hover { text-decoration: underline; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s ease; }
+        .btn-primary { background-color: #1a73e8; color: white; box-shadow: 0 4px 10px rgba(26, 115, 232, 0.3); margin-bottom: 15px;}
+        .btn-primary:hover { background-color: #1557b0; }
+        .divider { display: flex; align-items: center; text-align: center; margin: 25px 0; color: #999; font-size: 14px; }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #eee; }
+        .divider span { padding: 0 10px; }
+        .btn-google { background-color: white; color: #444; border: 1px solid #ddd; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-google:hover { background-color: #f8f9fa; }
+        .btn-google svg { width: 20px; height: 20px; }
     </style>
 </head>
 <body>
@@ -175,33 +45,99 @@
         </div>
 
         <div class="forgot-pass">
-            <!-- পাসওয়ার্ড রিসেট লিংকে ক্লিক করলে ফায়ারবেস পাসওয়ার্ড রিসেট ফাংশন কল করতে হবে -->
-            <a href="#" id="resetPasswordBtn">পাসওয়ার্ড ভুলে গেছেন?</a>
+            <a id="resetPasswordBtn">পাসওয়ার্ড ভুলে গেছেন?</a>
         </div>
 
-        <!-- ইমেইল-পাসওয়ার্ড দিয়ে লগইন করার বাটন -->
         <button class="btn btn-primary" id="emailLoginBtn">লগইন করুন</button>
 
         <div class="divider">
             <span>অথবা</span>
         </div>
 
-        <!-- গুগল লগইন বাটন -->
         <button class="btn btn-google" id="googleLoginBtn">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google Logo">
+            <svg width="20" height="20" viewBox="0 0 48 48">
+                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                <path fill="none" d="M0 0h48v48H0z"></path>
+            </svg>
             Google দিয়ে লগইন করুন
         </button>
-
-        <div class="signup-link">
-            অ্যাকাউন্ট নেই? <a href="#" id="createAccountBtn">নতুন অ্যাকাউন্ট খুলুন</a>
-        </div>
     </div>
 
-    <!-- নিচে আপনার Firebase-এর জাভাস্ক্রিপ্ট কোডগুলো যুক্ত করবেন -->
-    <script>
-        // এখানে আপনার Firebase কনফিগারেশন এবং লগইন, গুগল লগইন, পাসওয়ার্ড রিসেটের জাভাস্ক্রিপ্ট কোডগুলো বসবে।
-        // বাটনগুলোর ID (যেমন: emailLoginBtn, googleLoginBtn, resetPasswordBtn) ব্যবহার করে ইভেন্ট লিসেনার অ্যাড করবেন।
-    </script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
+        // আপনার ফায়ারবেস কনফিগারেশন
+        const firebaseConfig = {
+            apiKey: "AIzaSyDSE5kxWXULnlTB2sOY7AE6MLFLmHuguWg",
+            authDomain: "voter-apps-14962.firebaseapp.com",
+            projectId: "voter-apps-14962",
+            storageBucket: "voter-apps-14962.firebasestorage.app",
+            messagingSenderId: "957567395353",
+            appId: "1:957567395353:android:84aad0acdb14a8a343ec88"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        
+        // ১. ইমেইল ও পাসওয়ার্ড দিয়ে লগইন
+        document.getElementById('emailLoginBtn').addEventListener('click', () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            
+            if(!email || !password) {
+                alert("দয়া করে ইমেইল এবং পাসওয়ার্ড দিন!");
+                return;
+            }
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    alert("লগইন সফল হয়েছে!");
+                    // লগইন সফল হলে ড্যাশবোর্ডে যাওয়ার জন্য নিচের লাইনে আপনার ফাইলের নাম দিন
+                    // window.location.href = "dashboard.html"; 
+                })
+                .catch((error) => {
+                    alert("লগইন ব্যর্থ হয়েছে। ইমেইল বা পাসওয়ার্ড ভুল হতে পারে।");
+                });
+        });
+
+        // ২. গুগল দিয়ে লগইন
+        document.getElementById('googleLoginBtn').addEventListener('click', () => {
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    alert("গুগল লগইন সফল হয়েছে!");
+                    // window.location.href = "dashboard.html";
+                })
+                .catch((error) => {
+                    alert("গুগল লগইন বাতিল করা হয়েছে বা ব্যর্থ হয়েছে।");
+                });
+        });
+
+        // ৩. পাসওয়ার্ড রিসেট
+        document.getElementById('resetPasswordBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            const email = emailInput.value;
+            
+            if(!email) {
+                alert("পাসওয়ার্ড রিসেট করতে আগে উপরের বক্সে আপনার ইমেইলটি লিখুন!");
+                return;
+            }
+
+            sendPasswordResetEmail(auth, email)
+                .then(() => {
+                    alert("আপনার ইমেইলে পাসওয়ার্ড রিসেট লিংক পাঠানো হয়েছে।");
+                })
+                .catch((error) => {
+                    alert("ইমেইলটি সঠিক নয় অথবা অ্যাকাউন্টটি সিস্টেমে নেই।");
+                });
+        });
+    </script>
 </body>
 </html>
