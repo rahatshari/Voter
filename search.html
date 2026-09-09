@@ -31,7 +31,6 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans Bengali', system-ui, sans-serif; }
         
-        /* Pull-to-refresh বন্ধ করার জন্য overscroll-behavior-y ব্যবহার করা হয়েছে */
         html, body { overscroll-behavior-y: none; background-color: var(--bg); color: var(--text-main); padding: 10px; line-height: 1.4; }
         
         .app-logo { width: 70px; height: 70px; object-fit: cover; border-radius: 50%; margin-bottom: 10px; box-shadow: var(--shadow-soft); border: 2px solid white; }
@@ -39,16 +38,13 @@
 
         .container { max-width: 1200px; margin: auto; background: var(--surface); padding: 15px; border-radius: var(--radius-md); box-shadow: var(--shadow-soft); }
         
-        /* Home Header */
         .home-header { text-align: center; margin-bottom: 20px; }
         .home-header h2 { font-weight: 700; font-size: 20px; }
 
-        /* Compact Top Header for Search Screen */
         .header-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; }
         .header-title-area { display: flex; align-items: center; }
         .village-title { font-size: 18px; font-weight: 700; color: #1e293b; }
         
-        /* 3-Dot Menu */
         .settings-btn-dots { background: none; border: none; font-size: 24px; font-weight: bold; color: var(--text-muted); cursor: pointer; padding: 0 5px; line-height: 1; }
         .settings-btn-dots:hover { color: var(--primary); }
 
@@ -63,7 +59,6 @@
         .village-btn { background: #f8fafc; color: var(--text-main); padding: 15px; font-size: 16px; border: 1px solid var(--border); border-radius: var(--radius-md); cursor: pointer; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 5px; }
         .village-btn:hover { border-color: var(--primary); color: var(--primary); background: #f1f5f9; }
 
-        /* Search Boxes compressed */
         .search-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; margin-bottom: 10px; background: #f8fafc; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); }
         .search-container input { width: 100%; padding: 10px 12px; font-size: 14px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; transition: 0.2s; }
         .search-container input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
@@ -72,7 +67,6 @@
         .result-count { font-weight: 700; color: var(--success); font-size: 13px; background: #ecfdf5; padding: 8px 12px; border-radius: 6px; margin: 0; flex: 1; border: 1px solid #a7f3d0; }
         .clear-btn { padding: 8px 15px; background-color: #fee2e2; color: var(--danger); border: 1px solid #fecaca; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 700; }
 
-        /* Card Layout */
         .voter-list-container { display: flex; flex-direction: column; gap: 12px; }
         .voter-card { background: white; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         .voter-card-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px dashed var(--border); padding-bottom: 10px; margin-bottom: 10px; }
@@ -105,7 +99,6 @@
 </head>
 <body>
 
-    <!-- হোম স্ক্রিন -->
     <div id="homeScreen" class="container">
         <div class="home-header">
             <img src="logo.png" alt="App Logo" class="app-logo" onerror="this.style.display='none'">
@@ -114,20 +107,15 @@
         <div class="village-grid" id="villageButtons"></div>
     </div>
 
-    <!-- সার্চ স্ক্রিন -->
     <div id="searchScreen" class="container" style="display: none;">
-        
-        <!-- একদম ওপরে কম্প্যাক্ট হেডার -->
         <div class="header-row">
             <div class="header-title-area">
                 <img src="logo.png" alt="App Logo" class="header-logo" onerror="this.style.display='none'">
                 <span id="villageTitle" class="village-title">গ্রামের তালিকা</span>
             </div>
-            <!-- থ্রি-ডট অপশন বাটন -->
             <button class="settings-btn-dots" onclick="toggleSettings()">⋮</button>
         </div>
 
-        <!-- অপশন প্যানেল -->
         <div class="settings-panel" id="settingsPanel">
             <label><input type="checkbox" id="toggleFullList" onchange="applySettings()"> সম্পূর্ণ ভোটার তালিকা দেখান (বিনা সার্চে)</label>
             <label style="margin-bottom: 0;"><input type="checkbox" id="toggleStats" onchange="applySettings()"> পেশা ভিত্তিক পরিসংখ্যান দেখান</label>
@@ -148,50 +136,26 @@
         </div>
 
         <div class="voter-list-container" id="voterListContainer">
-            <!-- ভোটারদের কার্ড এখানে জাভাস্ক্রিপ্ট দিয়ে তৈরি হবে -->
         </div>
     </div>
 
     <div id="toast">মেসেজ</div>
 
-
-    <!-- ========================================================= -->
-    <!-- নিচের এই অংশে ৯টি গ্রামের ডাটা ফাইল অ্যাড করার জায়গা আছে -->
-    <!-- ========================================================= -->
-    
     <script>
-        // গ্লোবাল ডাটা স্টোর (এটি ডিলিট করবেন না)
-        const allVotersData = {};
+        // ডেমো ডাটাবেস (চেক করার জন্য)
+        const allVotersData = {
+            "পাঠামারা": [
+                { serialNo: "১", name: "মো: আব্দুল্লাহ আল রাহাত", gender: "পুরুষ", dob: "২৩/০২/২০০১", fatherName: "মো: আবুল বাশার", motherName: "মুকুল বেগম", profession: "ছাত্র/ছাত্রী", voterId: "0109030000412", address: "পাঠামারা, মোড়েলগঞ্জ, বাগেরহাট" },
+                { serialNo: "২", name: "রাহাতুল ইসলাম", gender: "পুরুষ", dob: "০৮/১০/২০০৬", fatherName: "সাখাওয়াত হোসেন বাচ্চু", motherName: "ফরিদা বেগম", profession: "ছাত্র/ছাত্রী", voterId: "0109000000111", address: "পাঠামারা, মোড়েলগঞ্জ, বাগেরহাট" }
+            ],
+            "মডেলগঞ্জ": [
+                { serialNo: "৩", name: "আব্দুল খালেক", gender: "পুরুষ", dob: "০১/০১/১৯৯০", fatherName: "মৃত সোবহান", motherName: "ফাতেমা বেগম", profession: "কৃষি", voterId: "1234567890123", address: "মডেলগঞ্জ, বাগেরহাট" }
+            ]
+        };
     </script>
 
-    <!-- ১ নম্বর গ্রাম (এটি আপলোড করা আছে) -->
-    <script src="pathamara.js"></script>
-    
-    <!-- ২ নম্বর গ্রাম -->
-    <!-- <script src="gram2.js"></script> -->
-    
-    <!-- ৩ নম্বর গ্রাম -->
-    <!-- <script src="gram3.js"></script> -->
-    
-    <!-- ৪ নম্বর গ্রাম -->
-    <!-- <script src="gram4.js"></script> -->
-    
-    <!-- ৫ নম্বর গ্রাম -->
-    <!-- <script src="gram5.js"></script> -->
-    
-    <!-- ৬ নম্বর গ্রাম -->
-    <!-- <script src="gram6.js"></script> -->
-    
-    <!-- ৭ নম্বর গ্রাম -->
-    <!-- <script src="gram7.js"></script> -->
-    
-    <!-- ৮ নম্বর গ্রাম -->
-    <!-- <script src="gram8.js"></script> -->
-    
-    <!-- ৯ নম্বর গ্রাম -->
-    <!-- <script src="gram9.js"></script> -->
-
-    <!-- ========================================================= -->
+    <!-- পরে আসল ডাটা ফাইলের কমেন্ট সরিয়ে যুক্ত করতে পারবেন -->
+    <!-- <script src="pathamara.js"></script> -->
 
     <script>
         let currentVillageData = [];
@@ -201,17 +165,16 @@
 
         window.onload = function() {
             setupVillages();
-            restoreAppState(); // অটো সেভ ডাটা চেক করবে
+            restoreAppState(); 
         };
 
-        // মোবাইলের ব্যাক বাটন সাপোর্ট
+        // ব্যাক বাটনের সমস্যা সমাধান
         window.addEventListener('popstate', function(event) {
-            if (isSearchScreenActive) {
+            if (isSearchScreenActive && location.hash !== '#search') {
                 goBackLogic();
             }
         });
 
-        // ================== অটো সেভ সিস্টেম ==================
         function saveAppState() {
             const state = {
                 activeVillage: activeVillage,
@@ -249,7 +212,6 @@
                 } catch(e) {}
             }
         }
-        // ===================================================
 
         function setupVillages() {
             const villageNames = Object.keys(allVotersData);
@@ -267,7 +229,6 @@
                 btn.className = 'village-btn';
                 btn.innerHTML = `<span style="font-size: 22px;">📍</span> ${village} <span style="font-size: 14px; background: #e2e8f0; padding: 4px 12px; border-radius: 20px; color: #475569; margin-top: 5px;">${dataArray.length} জন</span>`;
                 btn.onclick = () => {
-                    history.pushState({page: 'search'}, 'Search', '#search');
                     openVillage(village);
                 };
                 grid.appendChild(btn);
@@ -285,18 +246,22 @@
             isSearchScreenActive = true;
             
             if (!isRestoring) {
+                history.pushState({page: 'search'}, 'Search', '#search');
                 clearSearch(true); 
             } else {
+                history.replaceState({page: 'search'}, 'Search', '#search');
                 applySettings(true); 
             }
             saveAppState();
         }
 
+        // হোম স্ক্রিনে ফিরলে আগের সার্চ করা ডাটা ক্লিয়ার করা হবে
         function goBackLogic() {
             document.getElementById('searchScreen').style.display = 'none';
             document.getElementById('homeScreen').style.display = 'block';
             isSearchScreenActive = false;
-            activeVillage = ""; // হোম স্ক্রিনে আসলে সেভ ডাটা ক্লিয়ার হবে
+            activeVillage = ""; 
+            clearSearch(true); // ব্যাকগ্রাউন্ডের ডাটা ক্লিয়ার
             saveAppState();
         }
 
