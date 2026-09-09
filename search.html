@@ -79,6 +79,7 @@
         .card-label { color: var(--text-muted); font-weight: 600; width: 35%; }
         .card-val { color: var(--text-main); width: 65%; font-weight: 500; }
         .voter-id-val { color: var(--danger); font-weight: bold; letter-spacing: 1px; }
+        .age-badge { color: var(--primary); font-weight: 700; background: #e0e7ff; padding: 1px 6px; border-radius: 4px; font-size: 12px; margin-left: 5px; }
 
         .action-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
         .copy-btn, .print-btn { color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
@@ -155,25 +156,18 @@
     
     <!-- ২ নম্বর গ্রাম -->
     <!-- <script src="gram2.js"></script> -->
-    
     <!-- ৩ নম্বর গ্রাম -->
     <!-- <script src="gram3.js"></script> -->
-    
     <!-- ৪ নম্বর গ্রাম -->
     <!-- <script src="gram4.js"></script> -->
-    
     <!-- ৫ নম্বর গ্রাম -->
     <!-- <script src="gram5.js"></script> -->
-    
     <!-- ৬ নম্বর গ্রাম -->
     <!-- <script src="gram6.js"></script> -->
-    
     <!-- ৭ নম্বর গ্রাম -->
     <!-- <script src="gram7.js"></script> -->
-    
     <!-- ৮ নম্বর গ্রাম -->
     <!-- <script src="gram8.js"></script> -->
-    
     <!-- ৯ নম্বর গ্রাম -->
     <!-- <script src="gram9.js"></script> -->
 
@@ -190,12 +184,45 @@
             restoreAppState(); 
         };
 
-        // ব্যাক বাটনের সমস্যা সমাধান
         window.addEventListener('popstate', function(event) {
             if (isSearchScreenActive && location.hash !== '#search') {
                 goBackLogic();
             }
         });
+
+        // ================== বয়স হিসাব করার ফাংশন ==================
+        function convertToEnglishNumbers(bengaliStr) {
+            const numMap = {'০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4', '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9'};
+            return bengaliStr.replace(/[০-৯]/g, match => numMap[match]);
+        }
+
+        function convertToBengaliNumbers(englishStr) {
+            const numMap = {'0': '০', '1': '১', '2': '২', '3': '৩', '4': '৪', '5': '৫', '6': '৬', '7': '৭', '8': '৮', '9': '৯'};
+            return englishStr.toString().replace(/[0-9]/g, match => numMap[match]);
+        }
+
+        function calculateAge(dobStr) {
+            if (!dobStr || dobStr === '-') return '';
+            
+            // জন্ম তারিখকে ইংরেজি সংখ্যায় রূপান্তর করা (যেমন ২৩/০২/২০০১ -> 23/02/2001)
+            let engDob = convertToEnglishNumbers(dobStr);
+            let parts = engDob.split('/'); 
+            if (parts.length !== 3) return '';
+
+            let birthDate = new Date(parts[2], parts[1] - 1, parts[0]);
+            let today = new Date();
+            
+            let age = today.getFullYear() - birthDate.getFullYear();
+            let m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            
+            if(isNaN(age)) return '';
+            // বয়স বাংলায় দেখানো হবে (যেমন: ২৫ বছর)
+            return `(বয়স: ${convertToBengaliNumbers(age)} বছর)`;
+        }
+        // =======================================================
 
         function saveAppState() {
             const state = {
@@ -277,13 +304,12 @@
             saveAppState();
         }
 
-        // হোম স্ক্রিনে ফিরলে আগের সার্চ করা ডাটা ক্লিয়ার করা হবে
         function goBackLogic() {
             document.getElementById('searchScreen').style.display = 'none';
             document.getElementById('homeScreen').style.display = 'block';
             isSearchScreenActive = false;
             activeVillage = ""; 
-            clearSearch(true); // ব্যাকগ্রাউন্ডের ডাটা ক্লিয়ার
+            clearSearch(true); 
             saveAppState();
         }
 
@@ -340,6 +366,9 @@
             
             let htmlString = '';
             data.forEach((voter, index) => {
+                let calculatedAge = calculateAge(voter.dob);
+                let ageHtml = calculatedAge ? `<span class="age-badge">${calculatedAge}</span>` : '';
+
                 htmlString += `
                 <div class="voter-card">
                     <div class="voter-card-header">
@@ -352,7 +381,7 @@
                     
                     <div class="card-row"><span class="card-label">পিতার নাম:</span> <span class="card-val">${voter.fatherName || '-'}</span></div>
                     <div class="card-row"><span class="card-label">মাতার নাম:</span> <span class="card-val">${voter.motherName || '-'}</span></div>
-                    <div class="card-row"><span class="card-label">জন্ম তারিখ:</span> <span class="card-val">${voter.dob || '-'}</span></div>
+                    <div class="card-row"><span class="card-label">জন্ম তারিখ:</span> <span class="card-val">${voter.dob || '-'} ${ageHtml}</span></div>
                     <div class="card-row"><span class="card-label">পেশা:</span> <span class="card-val">${voter.profession || '-'}</span></div>
                     <div class="card-row"><span class="card-label">ভোটার নং:</span> <span class="card-val voter-id-val">${voter.voterId || '-'}</span></div>
                     <div class="card-row"><span class="card-label">ঠিকানা:</span> <span class="card-val">${voter.address || '-'}</span></div>
@@ -401,7 +430,8 @@
 
         function copyVoter(index) {
             const voter = currentlyDisplayedData[index];
-            const textToCopy = `ক্রমিক নং: ${voter.serialNo || '-'}\nনাম: ${voter.name || '-'} (${voter.gender || '-'})\nজন্ম তারিখ: ${voter.dob || '-'}\nপিতার নাম: ${voter.fatherName || '-'}\nমাতার নাম: ${voter.motherName || '-'}\nপেশা: ${voter.profession || '-'}\nভোটার নং: ${voter.voterId || '-'}\nঠিকানা: ${voter.address || '-'}`;
+            const ageText = calculateAge(voter.dob) ? ` ${calculateAge(voter.dob)}` : '';
+            const textToCopy = `ক্রমিক নং: ${voter.serialNo || '-'}\nনাম: ${voter.name || '-'} (${voter.gender || '-'})\nজন্ম তারিখ: ${voter.dob || '-'}${ageText}\nপিতার নাম: ${voter.fatherName || '-'}\nমাতার নাম: ${voter.motherName || '-'}\nপেশা: ${voter.profession || '-'}\nভোটার নং: ${voter.voterId || '-'}\nঠিকানা: ${voter.address || '-'}`;
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(textToCopy).then(() => showToast("✅ তথ্য কপি হয়েছে!")).catch(() => fallbackCopy(textToCopy));
             } else { fallbackCopy(textToCopy); }
@@ -426,6 +456,7 @@
 
         function printVoter(index) {
             const voter = currentlyDisplayedData[index];
+            const ageText = calculateAge(voter.dob) ? ` <b>${calculateAge(voter.dob)}</b>` : '';
             const printHTML = `
                 <!DOCTYPE html>
                 <html lang="bn">
@@ -448,7 +479,7 @@
                         <table>
                             <tr><td class="label">ক্রমিক নং:</td><td><b>${voter.serialNo || '-'}</b></td></tr>
                             <tr><td class="label">নাম:</td><td><b>${voter.name || '-'}</b> (${voter.gender || '-'})</td></tr>
-                            <tr><td class="label">জন্ম তারিখ:</td><td>${voter.dob || '-'}</td></tr>
+                            <tr><td class="label">জন্ম তারিখ:</td><td>${voter.dob || '-'}${ageText}</td></tr>
                             <tr><td class="label">পিতার নাম:</td><td>${voter.fatherName || '-'}</td></tr>
                             <tr><td class="label">মাতার নাম:</td><td>${voter.motherName || '-'}</td></tr>
                             <tr><td class="label">পেশা:</td><td>${voter.profession || '-'}</td></tr>
