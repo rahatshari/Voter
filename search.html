@@ -162,7 +162,6 @@
     <!-- ========================================================= -->
     
     <script>
-        // গ্লোবাল ডাটা স্টোর (এটি ডিলিট করবেন না)
         const allVotersData = {};
     </script>
 
@@ -170,7 +169,7 @@
     <script src="pathamara.js"></script>
     
     <!-- ২ নম্বর গ্রাম (নতুন ফাইল অ্যাড করতে চাইলে নিচের লাইনের কমেন্ট সরিয়ে দিন) -->
-    <script src="cotobadura.js"></script>
+    <script src="gram2.js"></script>
     
     <!-- ৩ নম্বর গ্রাম -->
     <!-- <script src="gram3.js"></script> -->
@@ -202,22 +201,24 @@
         let activeVillage = "";
 
         window.onload = function() {
-            if (!history.state) {
-                history.replaceState({view: 'home'}, 'Home', '');
-            }
+            // হোম পেজ লোড হওয়ার সাথে সাথে এটি বেস (Base) হিস্ট্রি হিসেবে সেট করা হলো 
+            history.replaceState({view: 'home'}, 'Home', window.location.pathname);
+            
             setupVillages();
             restoreAppState(); 
         };
 
+        // ব্রাউজার বা মোবাইলের ফিজিক্যাল ব্যাক বাটনের লজিক
         window.addEventListener('popstate', function(event) {
             if (isSearchScreenActive) {
                 goBackLogic_internal();
             }
         });
 
+        // UI-এর ⬅️ বাটনের লজিক
         function goBackUI() {
             if(isSearchScreenActive) {
-                history.back(); 
+                history.back(); // এটি popstate ইভেন্ট ট্রিগার করবে
             }
         }
 
@@ -351,11 +352,12 @@
             activeVillage = villageKey;
             isSearchScreenActive = true;
             
+            // সব সময় নতুন স্টেট পুশ করা হবে, যাতে ব্যাক বাটন চাপলে অ্যাপ থেকে বের না করে দেয়
+            history.pushState({view: 'search'}, 'Search', '#search');
+            
             if (!isRestoring) {
-                history.pushState({view: 'search'}, 'Search', '#search');
                 clearSearch(true); 
             } else {
-                history.replaceState({view: 'search'}, 'Search', '#search');
                 applySettings(true); 
             }
             saveAppState();
