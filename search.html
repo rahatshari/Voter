@@ -143,7 +143,6 @@
             <input type="text" id="searchName" onkeyup="searchVoters()" placeholder="🔍 নাম...">
             <input type="text" id="searchFather" onkeyup="searchVoters()" placeholder="👤 পিতার নাম...">
             <input type="text" id="searchMother" onkeyup="searchVoters()" placeholder="👩 মাতার নাম...">
-            <!-- অটোমেটিক স্লাশ (/) এবং বাংলা কনভার্সন যুক্ত জন্ম তারিখ ইনপুট -->
             <input type="text" id="searchDob" oninput="formatDobInput(event)" placeholder="📅 জন্ম তারিখ (যেমন: ২৩/০২/২০০১)">
         </div>
         
@@ -158,23 +157,43 @@
 
     <div id="toast">মেসেজ</div>
 
+    <!-- ========================================================= -->
+    <!-- নিচে আপনার ৯টি গ্রামের ডাটা ফাইলগুলো যুক্ত করুন -->
+    <!-- ========================================================= -->
+    
     <script>
+        // গ্লোবাল ডাটা স্টোর (এটি ডিলিট করবেন না)
         const allVotersData = {};
     </script>
 
-    <!-- আপনার অরিজিনাল ডাটা ফাইলগুলো এখানে যুক্ত করুন -->
+    <!-- ১ নম্বর গ্রাম (pathamara.js ফাইলটি আগে থেকেই আছে) -->
     <script src="pathamara.js"></script>
-    <script src="cotobadura.js"></script>
     
-    <script>
-        // ডেমো ডাটা
-        allVotersData["পাঠামারা"] = [
-            { serialNo: "১", name: "মো: আব্দুল্লাহ আল রাহাত", gender: "পুরুষ", dob: "২৩/০২/২০০১", fatherName: "মো: আবুল বাশার", motherName: "মুকুল বেগম", profession: "ছাত্র/ছাত্রী", voterId: "0109030000412", address: "পাঠামারা, মোড়েলগঞ্জ, বাগেরহাট" }
-        ];
-        allVotersData["ছোট বাদুরা"] = [
-            { serialNo: "১", name: "মো: শফিকুল ইসলাম", gender: "পুরুষ", dob: "১২/০৫/১৯৮২", fatherName: "আব্দুল জলিল", motherName: "ফাতেমা বেগম", profession: "ব্যবসা", voterId: "1234567890111", address: "ছোট বাদুরা, মোড়েলগঞ্জ, বাগেরহাট" }
-        ];
-    </script>
+    <!-- ২ নম্বর গ্রাম (নতুন ফাইল অ্যাড করতে চাইলে নিচের লাইনের কমেন্ট সরিয়ে দিন) -->
+    <!-- <script src="gram2.js"></script> -->
+    
+    <!-- ৩ নম্বর গ্রাম -->
+    <!-- <script src="gram3.js"></script> -->
+    
+    <!-- ৪ নম্বর গ্রাম -->
+    <!-- <script src="gram4.js"></script> -->
+    
+    <!-- ৫ নম্বর গ্রাম -->
+    <!-- <script src="gram5.js"></script> -->
+    
+    <!-- ৬ নম্বর গ্রাম -->
+    <!-- <script src="gram6.js"></script> -->
+    
+    <!-- ৭ নম্বর গ্রাম -->
+    <!-- <script src="gram7.js"></script> -->
+    
+    <!-- ৮ নম্বর গ্রাম -->
+    <!-- <script src="gram8.js"></script> -->
+    
+    <!-- ৯ নম্বর গ্রাম -->
+    <!-- <script src="gram9.js"></script> -->
+
+    <!-- ========================================================= -->
 
     <script>
         let currentVillageData = [];
@@ -212,23 +231,18 @@
             return str.toString().replace(/[0-9]/g, match => numMap[match]);
         }
 
-        // জন্ম তারিখে অটোমেটিক বাংলা রূপান্তর এবং (/) বসানোর ফাংশন
         function formatDobInput(e) {
             let input = e.target.value;
-            // প্রথমে যেকোনো ইংরেজি সংখ্যাকে বাংলায় রূপান্তর করে নিবে
             input = convertToBengaliNumbers(input);
-            
-            // শুধু বাংলা সংখ্যাগুলো রাখবে
             let cleaned = input.replace(/[^০-৯]/g, ''); 
             let formatted = '';
             
-            // অটোমেটিক স্লাশ (/) বসানোর লজিক
             if (cleaned.length > 0) formatted += cleaned.substring(0, 2);
             if (cleaned.length > 2) formatted += '/' + cleaned.substring(2, 4);
             if (cleaned.length > 4) formatted += '/' + cleaned.substring(4, 8);
             
             e.target.value = formatted;
-            searchVoters(); // ইনপুট দেওয়ার সাথে সাথেই সার্চ হবে
+            searchVoters(); 
         }
 
         function calculateAge(dobStr) {
@@ -320,6 +334,10 @@
                     allData.push({ ...v, villageName: village }); 
                 });
             }
+            if(allData.length === 0) {
+                alert("দুঃখিত, এখনো কোনো গ্রামের তথ্য যুক্ত করা হয়নি!");
+                return;
+            }
             openSearchScreen("সকল গ্রাম", allData, "all", isRestoring);
         }
 
@@ -401,7 +419,7 @@
                 container.innerHTML = '<div class="no-data">কোনো তথ্য পাওয়া যায়নি ❌</div>';
                 return;
             }
-            document.getElementById('resultCount').innerHTML = `✅ পাওয়া গেছে: <b>${data.length}</b> জন`;
+            document.getElementById('resultCount').innerHTML = `✅ পাওয়া গেছে: <b>${convertToBengaliNumbers(data.length)}</b> জন`;
             
             let htmlString = '';
             data.forEach((voter, index) => {
