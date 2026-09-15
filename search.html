@@ -58,12 +58,14 @@
         .settings-btn-dots:hover { color: var(--primary); }
         
         .settings-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 99; backdrop-filter: blur(2px); }
-        .settings-popup { display: none; position: absolute; right: 15px; top: 60px; background: white; padding: 20px; border-radius: 12px; box-shadow: var(--shadow-strong); z-index: 100; min-width: 260px; flex-direction: column; gap: 15px; border: 1px solid var(--border); animation: slideDown 0.2s ease-out; }
+        .settings-popup { display: none; position: absolute; right: 15px; top: 60px; background: white; padding: 20px; border-radius: 12px; box-shadow: var(--shadow-strong); z-index: 100; min-width: 270px; flex-direction: column; gap: 15px; border: 1px solid var(--border); animation: slideDown 0.2s ease-out; }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         
         .settings-popup label { font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; color: var(--text-main); background: #f8fafc; padding: 10px; border-radius: 8px; transition: 0.2s; border: 1px solid transparent;}
         .settings-popup label:hover { background: #eff6ff; border-color: #bfdbfe; }
         .settings-popup input[type="checkbox"] { width: 18px; height: 18px; margin-right: 10px; accent-color: var(--primary); cursor: pointer;}
+        .danger-label { color: #b91c1c !important; background: #fef2f2 !important; }
+        .danger-label:hover { background: #fee2e2 !important; border-color: #fca5a5 !important; }
 
         /* Modern Profession Stats */
         .stats-container { display: none; background: linear-gradient(135deg, #f0f9ff, #e0f2fe); padding: 15px; border-radius: var(--radius-md); margin-bottom: 15px; border: 1px solid #bae6fd; text-align: center; box-shadow: inset 0 2px 5px rgba(0,0,0,0.02); }
@@ -85,13 +87,16 @@
         .clear-btn:hover { background-color: #fecaca; }
 
         .voter-list-container { display: flex; flex-direction: column; gap: 12px; }
-        .voter-card { background: white; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .voter-card { background: white; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); position: relative; overflow: hidden; }
+        .migrated-card { border-color: #fca5a5; background: #fff5f5; } /* মাইগ্রেটেড ভোটারের কার্ডের স্পেশাল কালার */
         .voter-card-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px dashed var(--border); padding-bottom: 10px; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;}
         .voter-name-area { display: flex; flex-direction: column; gap: 4px; }
         .voter-title { font-weight: bold; color: var(--primary); font-size: 16px; }
+        .migrated-title { color: #dc2626; text-decoration: line-through; }
         .gender-badge { font-size: 11px; background: #e2e8f0; padding: 2px 8px; border-radius: 12px; color: var(--text-main); font-weight: 600; width: max-content; }
         .serial-badge { font-size: 12px; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; color: var(--text-muted); font-weight: 600; border: 1px solid #e2e8f0; }
         .village-badge { font-size: 12px; background: #e0e7ff; padding: 4px 8px; border-radius: 6px; color: var(--primary); font-weight: 700; border: 1px solid #c7d2fe; margin-right: 5px;}
+        .migrated-badge { font-size: 11px; background: #fee2e2; padding: 2px 8px; border-radius: 12px; color: #dc2626; font-weight: 700; width: max-content; border: 1px solid #fca5a5; margin-top: 3px; }
         
         .card-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; }
         .card-label { color: var(--text-muted); font-weight: 600; width: 35%; }
@@ -150,7 +155,9 @@
         <div class="settings-overlay" id="settingsOverlay" onclick="closeSettings()"></div>
         <div class="settings-popup" id="settingsPopup">
             <label><input type="checkbox" id="toggleFullList" onchange="applySettings()"> 📋 সম্পূর্ণ ভোটার তালিকা দেখান</label>
-            <label style="margin-bottom: 0;"><input type="checkbox" id="toggleStats" onchange="applySettings()"> 📊 পেশা ভিত্তিক পরিসংখ্যান দেখান</label>
+            <label><input type="checkbox" id="toggleStats" onchange="applySettings()"> 📊 পেশা ভিত্তিক পরিসংখ্যান দেখান</label>
+            <!-- মাইগ্রেটেড/কর্তিত ভোটার দেখার অপশন -->
+            <label class="danger-label"><input type="checkbox" id="toggleMigrated" onchange="applySettings()"> 🚫 কর্তিত/মাইগ্রেটেড ভোটার দেখুন</label>
         </div>
 
         <!-- আধুনিক পরিসংখ্যান কার্ড -->
@@ -192,22 +199,14 @@
     <!-- ========================================================= -->
     
     <script>
-        // গ্লোবাল ডাটা স্টোর (এটি ডিলিট করবেন না)
         const allVotersData = {};
     </script>
 
     <!-- আপনার আসল ডাটা ফাইলগুলো এখানে যুক্ত করুন -->
     <script src="pathamara.js"></script>
     <script src="cotobadura.js"></script>
-    
-    <!-- ৩ নম্বর গ্রাম (নতুন ফাইল অ্যাড করতে চাইলে নিচের লাইনের কমেন্ট সরিয়ে দিন) -->
     <!-- <script src="gram3.js"></script> -->
     <!-- <script src="gram4.js"></script> -->
-    <!-- <script src="gram5.js"></script> -->
-    <!-- <script src="gram6.js"></script> -->
-    <!-- <script src="gram7.js"></script> -->
-    <!-- <script src="gram8.js"></script> -->
-    <!-- <script src="gram9.js"></script> -->
 
     <!-- ========================================================= -->
 
@@ -216,6 +215,14 @@
         let currentlyDisplayedData = []; 
         let isSearchScreenActive = false;
         let activeVillage = "";
+
+        // ডাটাবেসের কোথাও 'মাইগ্রেটেড' বা 'কর্তিত' আছে কিনা চেক করার ফাংশন
+        function isMigrated(voter) {
+            if(!voter) return false;
+            // ভোটারের পুরো অবজেক্টটিকে স্ট্রিংয়ে রূপান্তর করে চেক করা হচ্ছে
+            const str = JSON.stringify(voter).toLowerCase();
+            return str.includes('মাইগ্রেটেড') || str.includes('কর্তিত');
+        }
 
         window.onload = function() {
             if (!history.state) {
@@ -237,7 +244,6 @@
             }
         }
 
-        // আধুনিক থ্রি-ডট মেনু কন্ট্রোল
         function toggleSettings() {
             const popup = document.getElementById('settingsPopup');
             const overlay = document.getElementById('settingsOverlay');
@@ -308,7 +314,8 @@
                 },
                 settings: {
                     fullList: document.getElementById('toggleFullList').checked,
-                    stats: document.getElementById('toggleStats').checked
+                    stats: document.getElementById('toggleStats').checked,
+                    migrated: document.getElementById('toggleMigrated').checked
                 }
             };
             localStorage.setItem('voterAppSavedState', JSON.stringify(state));
@@ -328,6 +335,7 @@
                         
                         document.getElementById('toggleFullList').checked = state.settings.fullList || false;
                         document.getElementById('toggleStats').checked = state.settings.stats || false;
+                        document.getElementById('toggleMigrated').checked = state.settings.migrated || false;
                         
                         if(state.activeVillage === "all") {
                             openGlobalSearch(true);
@@ -357,9 +365,12 @@
             
             villageNames.forEach(village => {
                 const dataArray = allVotersData[village] || [];
+                // মাইগ্রেটেড/কর্তিত ভোটারদের মূল হিসাব থেকে বাদ দেওয়া হলো
+                const activeCount = dataArray.filter(v => !isMigrated(v)).length;
+                
                 const btn = document.createElement('button');
                 btn.className = 'village-btn';
-                btn.innerHTML = `<span style="font-size: 22px;">📍</span> ${village} <span style="font-size: 14px; background: #e2e8f0; padding: 4px 12px; border-radius: 20px; color: #475569; margin-top: 5px;">${convertToBengaliNumbers(dataArray.length)} জন</span>`;
+                btn.innerHTML = `<span style="font-size: 22px;">📍</span> ${village} <span style="font-size: 14px; background: #e2e8f0; padding: 4px 12px; border-radius: 20px; color: #475569; margin-top: 5px;">${convertToBengaliNumbers(activeCount)} জন</span>`;
                 btn.onclick = () => {
                     openSearchScreen(village, allVotersData[village] || [], village);
                 };
@@ -387,7 +398,9 @@
             let currentSelection = profSelect.value;
             profSelect.innerHTML = '<option value="">💼 সকল পেশা</option>';
             
-            const uniqueProfs = [...new Set(currentVillageData.map(v => v.profession ? v.profession.trim() : 'পেশা দেওয়া নেই'))].filter(p => p !== 'nan' && p !== 'পেশা দেওয়া নেই');
+            // মাইগ্রেটেড ভোটারদের পেশা বাদ দিয়ে শুধু আসল ভোটারদের পেশা নেওয়া হলো
+            const activeData = currentVillageData.filter(v => !isMigrated(v));
+            const uniqueProfs = [...new Set(activeData.map(v => v.profession ? v.profession.trim() : 'পেশা দেওয়া নেই'))].filter(p => p !== 'nan' && p !== 'পেশা দেওয়া নেই');
             
             uniqueProfs.sort().forEach(p => {
                 profSelect.innerHTML += `<option value="${p}">${p}</option>`;
@@ -428,6 +441,7 @@
         function applySettings(skipSave = false) {
             const showFullList = document.getElementById('toggleFullList').checked;
             const showStats = document.getElementById('toggleStats').checked;
+            const showMigrated = document.getElementById('toggleMigrated').checked;
             
             if(showFullList) {
                 document.getElementById('searchGender').style.display = 'block';
@@ -456,9 +470,19 @@
             const isSearchEmpty = !queryName && !queryFather && !queryMother && !queryDob && !queryProfession && !queryGender;
             
             if(isSearchEmpty) {
-                if(showFullList) {
-                    displayVoters(currentVillageData);
-                } else {
+                let baseData = currentVillageData;
+                
+                // যদি মাইগ্রেটেড অপশন অন থাকে, তাহলে শুধু তাদের দেখাবে
+                if (showMigrated) {
+                    baseData = currentVillageData.filter(v => isMigrated(v));
+                    displayVoters(baseData);
+                } 
+                // মাইগ্রেটেড অপশন অফ থাকলে এবং সম্পূর্ণ লিস্ট অন থাকলে, সাধারণ ভোটারদের দেখাবে
+                else if(showFullList) {
+                    baseData = currentVillageData.filter(v => !isMigrated(v));
+                    displayVoters(baseData);
+                } 
+                else {
                     displayVoters([]); 
                     document.getElementById('resultCount').innerHTML = "✨ অনুসন্ধান করতে ওপরের বক্সে তথ্য দিন অথবা অপশন বাছাই করুন";
                 }
@@ -471,11 +495,14 @@
         function renderProfessionStats() {
             const statsDiv = document.getElementById('professionStats');
             statsDiv.style.display = 'block';
-            if(currentVillageData.length === 0){
+            
+            // পরিসংখ্যানেও মাইগ্রেটেডদের বাদ দেওয়া হলো
+            const activeData = currentVillageData.filter(v => !isMigrated(v));
+            if(activeData.length === 0){
                 statsDiv.innerHTML = "<h3>এই গ্রামের কোনো ডাটা নেই</h3>"; return;
             }
             const counts = {};
-            currentVillageData.forEach(v => {
+            activeData.forEach(v => {
                 let prof = v.profession ? v.profession.trim() : '';
                 if(prof === '' || prof === 'nan') prof = 'পেশা দেওয়া নেই';
                 counts[prof] = (counts[prof] || 0) + 1;
@@ -501,13 +528,20 @@
                 let calculatedAge = calculateAge(voter.dob);
                 let ageHtml = calculatedAge ? `<span class="age-badge">${calculatedAge}</span>` : '';
                 let villageBadgeHtml = voter.villageName ? `<span class="village-badge">📍 ${voter.villageName}</span>` : '';
+                
+                // মাইগ্রেটেড হলে কার্ডের ডিজাইন লাল রঙের হবে
+                let isMig = isMigrated(voter);
+                let cardClass = isMig ? "voter-card migrated-card" : "voter-card";
+                let titleClass = isMig ? "voter-title migrated-title" : "voter-title";
+                let statusBadge = isMig ? `<div class="migrated-badge">🚫 স্থানান্তরিত/কর্তিত</div>` : '';
 
                 htmlString += `
-                <div class="voter-card">
+                <div class="${cardClass}">
                     <div class="voter-card-header">
                         <div class="voter-name-area">
-                            <span class="voter-title">${voter.name || '-'}</span>
+                            <span class="${titleClass}">${voter.name || '-'}</span>
                             <span class="gender-badge">${voter.gender || '-'}</span>
+                            ${statusBadge}
                         </div>
                         <div>
                             ${villageBadgeHtml}
@@ -538,20 +572,23 @@
             const queryDob = convertToEnglishNumbers(document.getElementById('searchDob').value.trim());
             const queryProfession = document.getElementById('searchProfession').value.trim();
             const queryGender = document.getElementById('searchGender').value.trim();
+            
+            const showMigrated = document.getElementById('toggleMigrated').checked;
 
             const isSearchEmpty = !queryName && !queryFather && !queryMother && !queryDob && !queryProfession && !queryGender;
             
             if (isSearchEmpty) {
-                if (document.getElementById('toggleFullList').checked) {
-                    displayVoters(currentVillageData);
-                } else {
-                    displayVoters([]); 
-                    document.getElementById('resultCount').innerHTML = `✨ অনুসন্ধান করতে ওপরের বক্সে তথ্য দিন অথবা অপশন বাছাই করুন`;
-                }
+                applySettings(); // ফাঁকা থাকলে applySettings কল করে ফুল লিস্ট বা মাইগ্রেটেড লিস্ট দেখাবে
                 return;
             }
             
             const filteredData = currentVillageData.filter(voter => {
+                const vMig = isMigrated(voter);
+                
+                // মাইগ্রেটেড চেকবক্স অনুযায়ী ফিল্টারিং
+                if (showMigrated && !vMig) return false;
+                if (!showMigrated && vMig) return false;
+
                 const vName = (voter.name || '').toLowerCase();
                 const vFather = (voter.fatherName || '').toLowerCase();
                 const vMother = (voter.motherName || '').toLowerCase();
@@ -592,7 +629,8 @@
             const voter = currentlyDisplayedData[index];
             const ageText = calculateAge(voter.dob) ? ` ${calculateAge(voter.dob)}` : '';
             const villageText = voter.villageName ? `\nগ্রাম: ${voter.villageName}` : '';
-            const textToCopy = `ক্রমিক নং: ${voter.serialNo || '-'}\nনাম: ${voter.name || '-'} (${voter.gender || '-'})\nজন্ম তারিখ: ${voter.dob || '-'}${ageText}\nপিতার নাম: ${voter.fatherName || '-'}\nমাতার নাম: ${voter.motherName || '-'}\nপেশা: ${voter.profession || '-'}\nভোটার নং: ${voter.voterId || '-'}${villageText}\nঠিকানা: ${voter.address || '-'}`;
+            const statusText = isMigrated(voter) ? `\nস্ট্যাটাস: স্থানান্তরিত/কর্তিত` : '';
+            const textToCopy = `ক্রমিক নং: ${voter.serialNo || '-'}\nনাম: ${voter.name || '-'} (${voter.gender || '-'})\nজন্ম তারিখ: ${voter.dob || '-'}${ageText}\nপিতার নাম: ${voter.fatherName || '-'}\nমাতার নাম: ${voter.motherName || '-'}\nপেশা: ${voter.profession || '-'}\nভোটার নং: ${voter.voterId || '-'}${villageText}${statusText}\nঠিকানা: ${voter.address || '-'}`;
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(textToCopy).then(() => showToast("✅ তথ্য কপি হয়েছে!")).catch(() => fallbackCopy(textToCopy));
             } else { fallbackCopy(textToCopy); }
@@ -619,6 +657,8 @@
             const voter = currentlyDisplayedData[index];
             const ageText = calculateAge(voter.dob) ? ` <b>${calculateAge(voter.dob)}</b>` : '';
             const villageRow = voter.villageName ? `<tr><td class="label">গ্রাম:</td><td><b>${voter.villageName}</b></td></tr>` : '';
+            const statusRow = isMigrated(voter) ? `<tr><td class="label">স্ট্যাটাস:</td><td style="color:red;"><b>স্থানান্তরিত/কর্তিত</b></td></tr>` : '';
+            
             const printHTML = `
                 <!DOCTYPE html>
                 <html lang="bn">
@@ -640,6 +680,7 @@
                         <h3>ভোটার তথ্য</h3>
                         <table>
                             ${villageRow}
+                            ${statusRow}
                             <tr><td class="label">ক্রমিক নং:</td><td><b>${voter.serialNo || '-'}</b></td></tr>
                             <tr><td class="label">নাম:</td><td><b>${voter.name || '-'}</b> (${voter.gender || '-'})</td></tr>
                             <tr><td class="label">জন্ম তারিখ:</td><td>${voter.dob || '-'}${ageText}</td></tr>
