@@ -64,8 +64,9 @@
         .village-btn:hover { border-color: var(--primary); color: var(--primary); background: #f1f5f9; }
 
         .search-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 10px; background: #f8fafc; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); }
-        .search-container input { width: 100%; padding: 10px 12px; font-size: 14px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; transition: 0.2s; }
-        .search-container input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+        .search-container input, .search-container select { width: 100%; padding: 10px 12px; font-size: 14px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; transition: 0.2s; background: white; color: var(--text-main); font-family: 'Noto Sans Bengali', sans-serif;}
+        .search-container input:focus, .search-container select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+        .search-container select { cursor: pointer; font-weight: 600; }
 
         .action-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; flex-wrap: wrap; }
         .result-count { font-weight: 700; color: var(--success); font-size: 13px; background: #ecfdf5; padding: 8px 12px; border-radius: 6px; margin: 0; flex: 1; border: 1px solid #a7f3d0; }
@@ -138,12 +139,22 @@
 
         <div class="stats-container" id="professionStats"></div>
         
-        <!-- সার্চ বক্স -->
+        <!-- নতুন সার্চ বক্স এবং ফিল্টার অপশন -->
         <div class="search-container">
             <input type="text" id="searchName" onkeyup="searchVoters()" placeholder="🔍 নাম...">
             <input type="text" id="searchFather" onkeyup="searchVoters()" placeholder="👤 পিতার নাম...">
             <input type="text" id="searchMother" onkeyup="searchVoters()" placeholder="👩 মাতার নাম...">
             <input type="text" id="searchDob" oninput="formatDobInput(event)" placeholder="📅 জন্ম তারিখ (যেমন: ২৩/০২/২০০১)">
+            
+            <!-- পেশা অনুযায়ী সার্চ -->
+            <input type="text" id="searchProfession" onkeyup="searchVoters()" placeholder="💼 পেশা (যেমন: কৃষক)...">
+            
+            <!-- লিঙ্গ (নারী/পুরুষ) ফিল্টার করার ড্রপডাউন -->
+            <select id="searchGender" onchange="searchVoters()">
+                <option value="">👫 সকল ভোটার (নারী ও পুরুষ)</option>
+                <option value="পুরুষ">👨 পুরুষ ভোটার</option>
+                <option value="নারী">👩 নারী ভোটার</option>
+            </select>
         </div>
         
         <div class="action-row">
@@ -168,27 +179,20 @@
     <!-- ১ নম্বর গ্রাম (pathamara.js ফাইলটি আগে থেকেই আছে) -->
     <script src="pathamara.js"></script>
     
-    <!-- ২ নম্বর গ্রাম (নতুন ফাইল অ্যাড করতে চাইলে নিচের লাইনের কমেন্ট সরিয়ে দিন) -->
-    <script src="cotobadura.js"></script>
-    
+    <!-- ২ নম্বর গ্রাম -->
+    <!-- <script src="gram2.js"></script> -->
     <!-- ৩ নম্বর গ্রাম -->
     <!-- <script src="gram3.js"></script> -->
-    
     <!-- ৪ নম্বর গ্রাম -->
     <!-- <script src="gram4.js"></script> -->
-    
     <!-- ৫ নম্বর গ্রাম -->
     <!-- <script src="gram5.js"></script> -->
-    
     <!-- ৬ নম্বর গ্রাম -->
     <!-- <script src="gram6.js"></script> -->
-    
     <!-- ৭ নম্বর গ্রাম -->
     <!-- <script src="gram7.js"></script> -->
-    
     <!-- ৮ নম্বর গ্রাম -->
     <!-- <script src="gram8.js"></script> -->
-    
     <!-- ৯ নম্বর গ্রাম -->
     <!-- <script src="gram9.js"></script> -->
 
@@ -201,24 +205,22 @@
         let activeVillage = "";
 
         window.onload = function() {
-            // হোম পেজ লোড হওয়ার সাথে সাথে এটি বেস (Base) হিস্ট্রি হিসেবে সেট করা হলো 
-            history.replaceState({view: 'home'}, 'Home', window.location.pathname);
-            
+            if (!history.state) {
+                history.replaceState({view: 'home'}, 'Home', window.location.pathname);
+            }
             setupVillages();
             restoreAppState(); 
         };
 
-        // ব্রাউজার বা মোবাইলের ফিজিক্যাল ব্যাক বাটনের লজিক
         window.addEventListener('popstate', function(event) {
             if (isSearchScreenActive) {
                 goBackLogic_internal();
             }
         });
 
-        // UI-এর ⬅️ বাটনের লজিক
         function goBackUI() {
             if(isSearchScreenActive) {
-                history.back(); // এটি popstate ইভেন্ট ট্রিগার করবে
+                history.back(); 
             }
         }
 
@@ -270,7 +272,9 @@
                     name: document.getElementById('searchName').value,
                     father: document.getElementById('searchFather').value,
                     mother: document.getElementById('searchMother').value,
-                    dob: document.getElementById('searchDob').value
+                    dob: document.getElementById('searchDob').value,
+                    profession: document.getElementById('searchProfession').value,
+                    gender: document.getElementById('searchGender').value
                 },
                 settings: {
                     fullList: document.getElementById('toggleFullList').checked,
@@ -291,6 +295,8 @@
                         document.getElementById('searchFather').value = state.search.father || '';
                         document.getElementById('searchMother').value = state.search.mother || '';
                         document.getElementById('searchDob').value = state.search.dob || '';
+                        document.getElementById('searchProfession').value = state.search.profession || '';
+                        document.getElementById('searchGender').value = state.search.gender || '';
                         
                         document.getElementById('toggleFullList').checked = state.settings.fullList || false;
                         document.getElementById('toggleStats').checked = state.settings.stats || false;
@@ -352,7 +358,6 @@
             activeVillage = villageKey;
             isSearchScreenActive = true;
             
-            // সব সময় নতুন স্টেট পুশ করা হবে, যাতে ব্যাক বাটন চাপলে অ্যাপ থেকে বের না করে দেয়
             history.pushState({view: 'search'}, 'Search', '#search');
             
             if (!isRestoring) {
@@ -383,13 +388,21 @@
             if(showStats) { renderProfessionStats(); } 
             else { document.getElementById('professionStats').style.display = 'none'; }
 
-            const isSearchEmpty = ['searchName', 'searchFather', 'searchMother', 'searchDob'].every(id => document.getElementById(id).value.trim() === '');
+            const queryName = document.getElementById('searchName').value.trim();
+            const queryFather = document.getElementById('searchFather').value.trim();
+            const queryMother = document.getElementById('searchMother').value.trim();
+            const queryDob = document.getElementById('searchDob').value.trim();
+            const queryProfession = document.getElementById('searchProfession').value.trim();
+            const queryGender = document.getElementById('searchGender').value.trim();
+
+            const isSearchEmpty = !queryName && !queryFather && !queryMother && !queryDob && !queryProfession && !queryGender;
+            
             if(isSearchEmpty) {
                 if(showFullList) {
                     displayVoters(currentVillageData);
                 } else {
                     displayVoters([]); 
-                    document.getElementById('resultCount').innerHTML = "✨ অনুসন্ধান করতে ওপরের বক্সে তথ্য দিন";
+                    document.getElementById('resultCount').innerHTML = "✨ অনুসন্ধান করতে ওপরের বক্সে তথ্য দিন অথবা অপশন বাছাই করুন";
                 }
             } else {
                 searchVotersLogic();
@@ -464,15 +477,17 @@
             const queryFather = document.getElementById('searchFather').value.toLowerCase().trim();
             const queryMother = document.getElementById('searchMother').value.toLowerCase().trim();
             const queryDob = convertToEnglishNumbers(document.getElementById('searchDob').value.trim());
+            const queryProfession = document.getElementById('searchProfession').value.toLowerCase().trim();
+            const queryGender = document.getElementById('searchGender').value.trim();
 
-            const isSearchEmpty = !queryName && !queryFather && !queryMother && !queryDob;
+            const isSearchEmpty = !queryName && !queryFather && !queryMother && !queryDob && !queryProfession && !queryGender;
             
             if (isSearchEmpty) {
                 if (document.getElementById('toggleFullList').checked) {
                     displayVoters(currentVillageData);
                 } else {
                     displayVoters([]); 
-                    document.getElementById('resultCount').innerHTML = `✨ অনুসন্ধান করতে ওপরের বক্সে তথ্য দিন`;
+                    document.getElementById('resultCount').innerHTML = `✨ অনুসন্ধান করতে ওপরের বক্সে তথ্য দিন অথবা অপশন বাছাই করুন`;
                 }
                 return;
             }
@@ -482,11 +497,18 @@
                 const vFather = (voter.fatherName || '').toLowerCase();
                 const vMother = (voter.motherName || '').toLowerCase();
                 const vDob = convertToEnglishNumbers(voter.dob || '');
+                const vProfession = (voter.profession || '').toLowerCase();
+                const vGender = (voter.gender || '').trim();
 
-                return vName.includes(queryName) && 
-                       vFather.includes(queryFather) && 
-                       vMother.includes(queryMother) && 
-                       vDob.includes(queryDob);
+                const matchesText = vName.includes(queryName) && 
+                                    vFather.includes(queryFather) && 
+                                    vMother.includes(queryMother) && 
+                                    vDob.includes(queryDob) &&
+                                    vProfession.includes(queryProfession);
+                                    
+                const matchesGender = (queryGender === "") || (vGender === queryGender);
+
+                return matchesText && matchesGender;
             });
             
             if(filteredData.length === 0) {
@@ -501,7 +523,8 @@
         }
 
         function clearSearch(skipSave = false) {
-            ['searchName', 'searchFather', 'searchMother', 'searchDob'].forEach(id => document.getElementById(id).value = '');
+            ['searchName', 'searchFather', 'searchMother', 'searchDob', 'searchProfession'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('searchGender').value = '';
             applySettings(skipSave); 
         }
 
@@ -521,7 +544,7 @@
             textArea.style.position = "fixed"; document.body.appendChild(textArea);
             textArea.focus(); textArea.select();
             try { document.execCommand('copy') ? showToast("✅ তথ্য কপি হয়েছে!") : alert("কপি করা সম্ভব হয়নি!"); } 
-            catch (err) { alert("কপি সাপোর্ট করছে না!"); }
+            catch (err) { alert("কপি সাপোর্ট করছে মহাশয়!"); }
             document.body.removeChild(textArea);
         }
 
