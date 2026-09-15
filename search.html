@@ -27,41 +27,52 @@
             --radius-md: 12px;
             --radius-sm: 8px;
             --shadow-soft: 0 4px 15px -3px rgba(0,0,0,0.08);
+            --shadow-strong: 0 10px 25px -5px rgba(0,0,0,0.15);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans Bengali', system-ui, sans-serif; }
         
         html, body { overscroll-behavior-y: none; background-color: var(--bg); color: var(--text-main); padding: 10px; line-height: 1.4; }
         
-        .app-logo { width: 70px; height: 70px; object-fit: cover; border-radius: 50%; margin-bottom: 10px; box-shadow: var(--shadow-soft); border: 2px solid white; }
-        .header-logo { width: 35px; height: 35px; object-fit: cover; border-radius: 50%; vertical-align: middle; margin-right: 8px; border: 2px solid white; }
-
-        .container { max-width: 1200px; margin: auto; background: var(--surface); padding: 15px; border-radius: var(--radius-md); box-shadow: var(--shadow-soft); }
+        .container { max-width: 1200px; margin: auto; background: var(--surface); padding: 15px; border-radius: var(--radius-md); box-shadow: var(--shadow-soft); position: relative; }
         
-        .home-header { text-align: center; margin-bottom: 20px; }
-        .home-header h2 { font-weight: 700; font-size: 20px; margin-bottom: 15px; }
+        /* Modern Home Header */
+        .home-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+        .home-header-left { display: flex; align-items: center; gap: 12px; }
+        .app-logo { width: 50px; height: 50px; object-fit: cover; border-radius: 50%; box-shadow: var(--shadow-soft); border: 2px solid white; }
+        .home-header-left h2 { font-weight: 700; font-size: 18px; color: var(--text-main); margin: 0; }
+        
+        .global-search-icon { background: #eff6ff; color: var(--primary); width: 45px; height: 45px; border-radius: 50%; border: none; font-size: 20px; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.3s; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.15); }
+        .global-search-icon:hover { background: var(--primary); color: white; transform: scale(1.05); }
 
-        .global-search-btn { background: var(--primary); color: white; padding: 15px; font-size: 16px; border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 700; display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: 20px; gap: 8px; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2); }
-        .global-search-btn:hover { background: var(--primary-hover); }
-
+        /* Search Header */
         .header-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; }
         .header-title-area { display: flex; align-items: center; }
-        .back-icon-btn { background: none; border: none; font-size: 22px; cursor: pointer; margin-right: 12px; color: var(--text-main); }
+        .back-icon-btn { background: #f1f5f9; border: none; font-size: 18px; cursor: pointer; margin-right: 12px; width: 35px; height: 35px; border-radius: 50%; display: flex; justify-content: center; align-items: center; transition: 0.2s;}
+        .back-icon-btn:hover { background: #e2e8f0; }
+        .header-logo { width: 35px; height: 35px; object-fit: cover; border-radius: 50%; margin-right: 8px; border: 2px solid white; }
         .village-title { font-size: 18px; font-weight: 700; color: #1e293b; }
         
-        .settings-btn-dots { background: none; border: none; font-size: 24px; font-weight: bold; color: var(--text-muted); cursor: pointer; padding: 0 5px; line-height: 1; }
+        /* Modern 3-Dot Menu Popup */
+        .settings-btn-dots { background: none; border: none; font-size: 24px; font-weight: bold; color: var(--text-muted); cursor: pointer; padding: 0 5px; line-height: 1; transition: 0.2s;}
         .settings-btn-dots:hover { color: var(--primary); }
+        
+        .settings-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 99; backdrop-filter: blur(2px); }
+        .settings-popup { display: none; position: absolute; right: 15px; top: 60px; background: white; padding: 20px; border-radius: 12px; box-shadow: var(--shadow-strong); z-index: 100; min-width: 260px; flex-direction: column; gap: 15px; border: 1px solid var(--border); animation: slideDown 0.2s ease-out; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .settings-popup label { font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; color: var(--text-main); background: #f8fafc; padding: 10px; border-radius: 8px; transition: 0.2s; border: 1px solid transparent;}
+        .settings-popup label:hover { background: #eff6ff; border-color: #bfdbfe; }
+        .settings-popup input[type="checkbox"] { width: 18px; height: 18px; margin-right: 10px; accent-color: var(--primary); cursor: pointer;}
 
-        .settings-panel { display: none; background: #f8fafc; padding: 15px; border-radius: var(--radius-sm); margin-bottom: 15px; border: 1px solid var(--border); }
-        .settings-panel label { font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; margin-bottom: 10px; color: var(--text-main); }
-        .settings-panel input[type="checkbox"] { width: 16px; height: 16px; margin-right: 10px; accent-color: var(--primary); }
-
-        .stats-container { display: none; background: #eff6ff; padding: 15px; border-radius: var(--radius-sm); margin-bottom: 15px; border: 1px solid #bfdbfe; text-align: center; }
-        .stat-badge { display: inline-block; background: white; color: var(--primary); padding: 6px 12px; border-radius: 20px; margin: 4px; font-size: 12px; font-weight: 600; border: 1px solid #e0e7ff; }
+        /* Modern Profession Stats */
+        .stats-container { display: none; background: linear-gradient(135deg, #f0f9ff, #e0f2fe); padding: 15px; border-radius: var(--radius-md); margin-bottom: 15px; border: 1px solid #bae6fd; text-align: center; box-shadow: inset 0 2px 5px rgba(0,0,0,0.02); }
+        .stats-container h3 { font-size: 14px; color: #0284c7; margin-bottom: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;}
+        .stat-badge { display: inline-block; background: linear-gradient(to right, #4f46e5, #3b82f6); color: white; padding: 6px 14px; border-radius: 20px; margin: 4px; font-size: 12px; font-weight: 600; box-shadow: 0 3px 6px rgba(59, 130, 246, 0.2); }
 
         .village-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
-        .village-btn { background: #f8fafc; color: var(--text-main); padding: 15px; font-size: 16px; border: 1px solid var(--border); border-radius: var(--radius-md); cursor: pointer; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 5px; }
-        .village-btn:hover { border-color: var(--primary); color: var(--primary); background: #f1f5f9; }
+        .village-btn { background: #f8fafc; color: var(--text-main); padding: 15px; font-size: 16px; border: 1px solid var(--border); border-radius: var(--radius-md); cursor: pointer; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 5px; transition: 0.2s;}
+        .village-btn:hover { border-color: var(--primary); color: var(--primary); background: #f1f5f9; transform: translateY(-2px); box-shadow: var(--shadow-soft);}
 
         .search-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 10px; background: #f8fafc; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); }
         .search-container input, .search-container select { width: 100%; padding: 10px 12px; font-size: 14px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; transition: 0.2s; background: white; color: var(--text-main); font-family: 'Noto Sans Bengali', sans-serif;}
@@ -70,7 +81,8 @@
 
         .action-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; flex-wrap: wrap; }
         .result-count { font-weight: 700; color: var(--success); font-size: 13px; background: #ecfdf5; padding: 8px 12px; border-radius: 6px; margin: 0; flex: 1; border: 1px solid #a7f3d0; }
-        .clear-btn { padding: 8px 15px; background-color: #fee2e2; color: var(--danger); border: 1px solid #fecaca; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 700; }
+        .clear-btn { padding: 8px 15px; background-color: #fee2e2; color: var(--danger); border: 1px solid #fecaca; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 700; transition: 0.2s;}
+        .clear-btn:hover { background-color: #fecaca; }
 
         .voter-list-container { display: flex; flex-direction: column; gap: 12px; }
         .voter-card { background: white; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
@@ -110,13 +122,15 @@
     <!-- হোম স্ক্রিন -->
     <div id="homeScreen" class="container">
         <div class="home-header">
-            <img src="logo.png" alt="App Logo" class="app-logo" onerror="this.style.display='none'">
-            <h2>আপনার গ্রাম নির্বাচন করুন</h2>
+            <div class="home-header-left">
+                <img src="logo.png" alt="App Logo" class="app-logo" onerror="this.style.display='none'">
+                <h2>গ্রাম নির্বাচন করুন</h2>
+            </div>
+            <!-- আধুনিক গ্লোবাল সার্চ আইকন -->
+            <button class="global-search-icon" onclick="openGlobalSearch()" title="সকল গ্রামের তথ্য খুঁজুন">
+                🔍
+            </button>
         </div>
-        
-        <button class="global-search-btn" onclick="openGlobalSearch()">
-            <span>🔍</span> সকল গ্রামের তথ্য একসাথে খুঁজুন
-        </button>
 
         <div class="village-grid" id="villageButtons"></div>
     </div>
@@ -132,28 +146,33 @@
             <button class="settings-btn-dots" onclick="toggleSettings()">⋮</button>
         </div>
 
-        <div class="settings-panel" id="settingsPanel">
-            <label><input type="checkbox" id="toggleFullList" onchange="applySettings()"> সম্পূর্ণ ভোটার তালিকা দেখান (বিনা সার্চে)</label>
-            <label style="margin-bottom: 0;"><input type="checkbox" id="toggleStats" onchange="applySettings()"> পেশা ভিত্তিক পরিসংখ্যান দেখান</label>
+        <!-- আধুনিক থ্রি-ডট পপআপ মেনু -->
+        <div class="settings-overlay" id="settingsOverlay" onclick="closeSettings()"></div>
+        <div class="settings-popup" id="settingsPopup">
+            <label><input type="checkbox" id="toggleFullList" onchange="applySettings()"> 📋 সম্পূর্ণ ভোটার তালিকা দেখান</label>
+            <label style="margin-bottom: 0;"><input type="checkbox" id="toggleStats" onchange="applySettings()"> 📊 পেশা ভিত্তিক পরিসংখ্যান দেখান</label>
         </div>
 
+        <!-- আধুনিক পরিসংখ্যান কার্ড -->
         <div class="stats-container" id="professionStats"></div>
         
-        <!-- নতুন সার্চ বক্স এবং ফিল্টার অপশন -->
+        <!-- সার্চ বক্স -->
         <div class="search-container">
             <input type="text" id="searchName" onkeyup="searchVoters()" placeholder="🔍 নাম...">
             <input type="text" id="searchFather" onkeyup="searchVoters()" placeholder="👤 পিতার নাম...">
             <input type="text" id="searchMother" onkeyup="searchVoters()" placeholder="👩 মাতার নাম...">
             <input type="text" id="searchDob" oninput="formatDobInput(event)" placeholder="📅 জন্ম তারিখ (যেমন: ২৩/০২/২০০১)">
             
-            <!-- পেশা অনুযায়ী সার্চ -->
-            <input type="text" id="searchProfession" onkeyup="searchVoters()" placeholder="💼 পেশা (যেমন: কৃষক)...">
+            <!-- স্মার্ট পেশা ড্রপডাউন (হাইড করা থাকবে) -->
+            <select id="searchProfession" onchange="searchVoters()" style="display: none;">
+                <option value="">💼 সকল পেশা</option>
+            </select>
             
-            <!-- লিঙ্গ (নারী/পুরুষ) ফিল্টার করার ড্রপডাউন -->
-            <select id="searchGender" onchange="searchVoters()">
-                <option value="">👫 সকল ভোটার (নারী ও পুরুষ)</option>
-                <option value="পুরুষ">👨 পুরুষ ভোটার</option>
-                <option value="নারী">👩 নারী ভোটার</option>
+            <!-- স্মার্ট লিঙ্গ ফিল্টার (হাইড করা থাকবে) -->
+            <select id="searchGender" onchange="searchVoters()" style="display: none;">
+                <option value="">👫 সকল ভোটার</option>
+                <option value="পুরুষ">👨 পুরুষ</option>
+                <option value="মহিলা">👩 মহিলা</option>
             </select>
         </div>
         
@@ -169,31 +188,25 @@
     <div id="toast">মেসেজ</div>
 
     <!-- ========================================================= -->
-    <!-- নিচে আপনার ৯টি গ্রামের ডাটা ফাইলগুলো যুক্ত করুন -->
+    <!-- নিচে আপনার গ্রামের ডাটা ফাইলগুলো যুক্ত করা হলো -->
     <!-- ========================================================= -->
     
     <script>
+        // গ্লোবাল ডাটা স্টোর (এটি ডিলিট করবেন না)
         const allVotersData = {};
     </script>
 
-    <!-- ১ নম্বর গ্রাম (pathamara.js ফাইলটি আগে থেকেই আছে) -->
+    <!-- আপনার আসল ডাটা ফাইলগুলো এখানে যুক্ত করুন -->
     <script src="pathamara.js"></script>
-    
-    <!-- ২ নম্বর গ্রাম -->
     <script src="cotobadura.js"></script>
-    <!-- ৩ নম্বর গ্রাম -->
+    
+    <!-- ৩ নম্বর গ্রাম (নতুন ফাইল অ্যাড করতে চাইলে নিচের লাইনের কমেন্ট সরিয়ে দিন) -->
     <!-- <script src="gram3.js"></script> -->
-    <!-- ৪ নম্বর গ্রাম -->
     <!-- <script src="gram4.js"></script> -->
-    <!-- ৫ নম্বর গ্রাম -->
     <!-- <script src="gram5.js"></script> -->
-    <!-- ৬ নম্বর গ্রাম -->
     <!-- <script src="gram6.js"></script> -->
-    <!-- ৭ নম্বর গ্রাম -->
     <!-- <script src="gram7.js"></script> -->
-    <!-- ৮ নম্বর গ্রাম -->
     <!-- <script src="gram8.js"></script> -->
-    <!-- ৯ নম্বর গ্রাম -->
     <!-- <script src="gram9.js"></script> -->
 
     <!-- ========================================================= -->
@@ -222,6 +235,23 @@
             if(isSearchScreenActive) {
                 history.back(); 
             }
+        }
+
+        // আধুনিক থ্রি-ডট মেনু কন্ট্রোল
+        function toggleSettings() {
+            const popup = document.getElementById('settingsPopup');
+            const overlay = document.getElementById('settingsOverlay');
+            if(popup.style.display === 'flex') {
+                closeSettings();
+            } else {
+                popup.style.display = 'flex';
+                overlay.style.display = 'block';
+            }
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsPopup').style.display = 'none';
+            document.getElementById('settingsOverlay').style.display = 'none';
         }
 
         function convertToEnglishNumbers(str) {
@@ -295,8 +325,6 @@
                         document.getElementById('searchFather').value = state.search.father || '';
                         document.getElementById('searchMother').value = state.search.mother || '';
                         document.getElementById('searchDob').value = state.search.dob || '';
-                        document.getElementById('searchProfession').value = state.search.profession || '';
-                        document.getElementById('searchGender').value = state.search.gender || '';
                         
                         document.getElementById('toggleFullList').checked = state.settings.fullList || false;
                         document.getElementById('toggleStats').checked = state.settings.stats || false;
@@ -306,6 +334,12 @@
                         } else {
                             openSearchScreen(state.activeVillage, allVotersData[state.activeVillage], state.activeVillage, true);
                         }
+
+                        setTimeout(() => {
+                            document.getElementById('searchProfession').value = state.search.profession || '';
+                            document.getElementById('searchGender').value = state.search.gender || '';
+                            searchVotersLogic();
+                        }, 50);
                     }
                 } catch(e) {}
             }
@@ -325,7 +359,7 @@
                 const dataArray = allVotersData[village] || [];
                 const btn = document.createElement('button');
                 btn.className = 'village-btn';
-                btn.innerHTML = `<span style="font-size: 22px;">📍</span> ${village} <span style="font-size: 14px; background: #e2e8f0; padding: 4px 12px; border-radius: 20px; color: #475569; margin-top: 5px;">${dataArray.length} জন</span>`;
+                btn.innerHTML = `<span style="font-size: 22px;">📍</span> ${village} <span style="font-size: 14px; background: #e2e8f0; padding: 4px 12px; border-radius: 20px; color: #475569; margin-top: 5px;">${convertToBengaliNumbers(dataArray.length)} জন</span>`;
                 btn.onclick = () => {
                     openSearchScreen(village, allVotersData[village] || [], village);
                 };
@@ -348,12 +382,25 @@
             openSearchScreen("সকল গ্রাম", allData, "all", isRestoring);
         }
 
+        function populateProfessions() {
+            const profSelect = document.getElementById('searchProfession');
+            let currentSelection = profSelect.value;
+            profSelect.innerHTML = '<option value="">💼 সকল পেশা</option>';
+            
+            const uniqueProfs = [...new Set(currentVillageData.map(v => v.profession ? v.profession.trim() : 'পেশা দেওয়া নেই'))].filter(p => p !== 'nan' && p !== 'পেশা দেওয়া নেই');
+            
+            uniqueProfs.sort().forEach(p => {
+                profSelect.innerHTML += `<option value="${p}">${p}</option>`;
+            });
+            profSelect.value = currentSelection; 
+        }
+
         function openSearchScreen(title, data, villageKey, isRestoring = false) {
             document.getElementById('homeScreen').style.display = 'none';
             document.getElementById('searchScreen').style.display = 'block';
             document.getElementById('villageTitle').innerText = `${title} - তালিকা`;
             currentVillageData = data;
-            document.getElementById('settingsPanel').style.display = 'none';
+            closeSettings();
             
             activeVillage = villageKey;
             isSearchScreenActive = true;
@@ -374,19 +421,30 @@
             isSearchScreenActive = false;
             activeVillage = ""; 
             clearSearch(true); 
+            closeSettings();
             saveAppState();
-        }
-
-        function toggleSettings() {
-            const panel = document.getElementById('settingsPanel');
-            panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'block' : 'none';
         }
 
         function applySettings(skipSave = false) {
             const showFullList = document.getElementById('toggleFullList').checked;
             const showStats = document.getElementById('toggleStats').checked;
-            if(showStats) { renderProfessionStats(); } 
-            else { document.getElementById('professionStats').style.display = 'none'; }
+            
+            if(showFullList) {
+                document.getElementById('searchGender').style.display = 'block';
+            } else {
+                document.getElementById('searchGender').style.display = 'none';
+                document.getElementById('searchGender').value = '';
+            }
+
+            if(showStats) { 
+                renderProfessionStats();
+                populateProfessions();
+                document.getElementById('searchProfession').style.display = 'block';
+            } else { 
+                document.getElementById('professionStats').style.display = 'none'; 
+                document.getElementById('searchProfession').style.display = 'none';
+                document.getElementById('searchProfession').value = '';
+            }
 
             const queryName = document.getElementById('searchName').value.trim();
             const queryFather = document.getElementById('searchFather').value.trim();
@@ -422,8 +480,10 @@
                 if(prof === '' || prof === 'nan') prof = 'পেশা দেওয়া নেই';
                 counts[prof] = (counts[prof] || 0) + 1;
             });
-            let html = '<h3 style="font-size:14px; margin-bottom:8px;">📊 পেশা ভিত্তিক পরিসংখ্যান:</h3><div>';
-            for (let prof in counts) html += `<span class="stat-badge">${prof}: ${counts[prof]}</span>`;
+            let html = '<h3>📊 পেশা ভিত্তিক পরিসংখ্যান</h3><div>';
+            for (let prof in counts) {
+                html += `<span class="stat-badge">${prof}: ${convertToBengaliNumbers(counts[prof])}</span>`;
+            }
             statsDiv.innerHTML = html + '</div>';
         }
 
@@ -440,7 +500,6 @@
             data.forEach((voter, index) => {
                 let calculatedAge = calculateAge(voter.dob);
                 let ageHtml = calculatedAge ? `<span class="age-badge">${calculatedAge}</span>` : '';
-                
                 let villageBadgeHtml = voter.villageName ? `<span class="village-badge">📍 ${voter.villageName}</span>` : '';
 
                 htmlString += `
@@ -477,7 +536,7 @@
             const queryFather = document.getElementById('searchFather').value.toLowerCase().trim();
             const queryMother = document.getElementById('searchMother').value.toLowerCase().trim();
             const queryDob = convertToEnglishNumbers(document.getElementById('searchDob').value.trim());
-            const queryProfession = document.getElementById('searchProfession').value.toLowerCase().trim();
+            const queryProfession = document.getElementById('searchProfession').value.trim();
             const queryGender = document.getElementById('searchGender').value.trim();
 
             const isSearchEmpty = !queryName && !queryFather && !queryMother && !queryDob && !queryProfession && !queryGender;
@@ -497,18 +556,18 @@
                 const vFather = (voter.fatherName || '').toLowerCase();
                 const vMother = (voter.motherName || '').toLowerCase();
                 const vDob = convertToEnglishNumbers(voter.dob || '');
-                const vProfession = (voter.profession || '').toLowerCase();
+                const vProfession = (voter.profession || '').trim();
                 const vGender = (voter.gender || '').trim();
 
                 const matchesText = vName.includes(queryName) && 
                                     vFather.includes(queryFather) && 
                                     vMother.includes(queryMother) && 
-                                    vDob.includes(queryDob) &&
-                                    vProfession.includes(queryProfession);
-                                    
+                                    vDob.includes(queryDob);
+                
+                const matchesProfession = (queryProfession === "") || (vProfession === queryProfession);
                 const matchesGender = (queryGender === "") || (vGender === queryGender);
 
-                return matchesText && matchesGender;
+                return matchesText && matchesProfession && matchesGender;
             });
             
             if(filteredData.length === 0) {
@@ -523,7 +582,8 @@
         }
 
         function clearSearch(skipSave = false) {
-            ['searchName', 'searchFather', 'searchMother', 'searchDob', 'searchProfession'].forEach(id => document.getElementById(id).value = '');
+            ['searchName', 'searchFather', 'searchMother', 'searchDob'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('searchProfession').value = '';
             document.getElementById('searchGender').value = '';
             applySettings(skipSave); 
         }
