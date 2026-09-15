@@ -88,7 +88,7 @@
 
         .voter-list-container { display: flex; flex-direction: column; gap: 12px; }
         .voter-card { background: white; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); position: relative; overflow: hidden; }
-        .migrated-card { border-color: #fca5a5; background: #fff5f5; } /* মাইগ্রেটেড ভোটারের কার্ডের স্পেশাল কালার */
+        .migrated-card { border-color: #fca5a5; background: #fff5f5; } 
         .voter-card-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px dashed var(--border); padding-bottom: 10px; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;}
         .voter-name-area { display: flex; flex-direction: column; gap: 4px; }
         .voter-title { font-weight: bold; color: var(--primary); font-size: 16px; }
@@ -216,12 +216,11 @@
         let isSearchScreenActive = false;
         let activeVillage = "";
 
-        // ডাটাবেসের কোথাও 'মাইগ্রেটেড' বা 'কর্তিত' আছে কিনা চেক করার ফাংশন
+        // ডাটাবেসের কোথাও 'মাইগ্রেট', 'মাইগ্রেটেড' বা 'কর্তিত' আছে কিনা চেক করার ফাংশন
         function isMigrated(voter) {
             if(!voter) return false;
-            // ভোটারের পুরো অবজেক্টটিকে স্ট্রিংয়ে রূপান্তর করে চেক করা হচ্ছে
             const str = JSON.stringify(voter).toLowerCase();
-            return str.includes('মাইগ্রেটেড') || str.includes('কর্তিত');
+            return str.includes('মাইগ্রেট') || str.includes('মাইগ্রেটেড') || str.includes('কর্তিত');
         }
 
         window.onload = function() {
@@ -365,7 +364,6 @@
             
             villageNames.forEach(village => {
                 const dataArray = allVotersData[village] || [];
-                // মাইগ্রেটেড/কর্তিত ভোটারদের মূল হিসাব থেকে বাদ দেওয়া হলো
                 const activeCount = dataArray.filter(v => !isMigrated(v)).length;
                 
                 const btn = document.createElement('button');
@@ -398,7 +396,6 @@
             let currentSelection = profSelect.value;
             profSelect.innerHTML = '<option value="">💼 সকল পেশা</option>';
             
-            // মাইগ্রেটেড ভোটারদের পেশা বাদ দিয়ে শুধু আসল ভোটারদের পেশা নেওয়া হলো
             const activeData = currentVillageData.filter(v => !isMigrated(v));
             const uniqueProfs = [...new Set(activeData.map(v => v.profession ? v.profession.trim() : 'পেশা দেওয়া নেই'))].filter(p => p !== 'nan' && p !== 'পেশা দেওয়া নেই');
             
@@ -472,12 +469,10 @@
             if(isSearchEmpty) {
                 let baseData = currentVillageData;
                 
-                // যদি মাইগ্রেটেড অপশন অন থাকে, তাহলে শুধু তাদের দেখাবে
                 if (showMigrated) {
                     baseData = currentVillageData.filter(v => isMigrated(v));
                     displayVoters(baseData);
                 } 
-                // মাইগ্রেটেড অপশন অফ থাকলে এবং সম্পূর্ণ লিস্ট অন থাকলে, সাধারণ ভোটারদের দেখাবে
                 else if(showFullList) {
                     baseData = currentVillageData.filter(v => !isMigrated(v));
                     displayVoters(baseData);
@@ -496,7 +491,6 @@
             const statsDiv = document.getElementById('professionStats');
             statsDiv.style.display = 'block';
             
-            // পরিসংখ্যানেও মাইগ্রেটেডদের বাদ দেওয়া হলো
             const activeData = currentVillageData.filter(v => !isMigrated(v));
             if(activeData.length === 0){
                 statsDiv.innerHTML = "<h3>এই গ্রামের কোনো ডাটা নেই</h3>"; return;
@@ -529,7 +523,6 @@
                 let ageHtml = calculatedAge ? `<span class="age-badge">${calculatedAge}</span>` : '';
                 let villageBadgeHtml = voter.villageName ? `<span class="village-badge">📍 ${voter.villageName}</span>` : '';
                 
-                // মাইগ্রেটেড হলে কার্ডের ডিজাইন লাল রঙের হবে
                 let isMig = isMigrated(voter);
                 let cardClass = isMig ? "voter-card migrated-card" : "voter-card";
                 let titleClass = isMig ? "voter-title migrated-title" : "voter-title";
@@ -578,14 +571,13 @@
             const isSearchEmpty = !queryName && !queryFather && !queryMother && !queryDob && !queryProfession && !queryGender;
             
             if (isSearchEmpty) {
-                applySettings(); // ফাঁকা থাকলে applySettings কল করে ফুল লিস্ট বা মাইগ্রেটেড লিস্ট দেখাবে
+                applySettings(); 
                 return;
             }
             
             const filteredData = currentVillageData.filter(voter => {
                 const vMig = isMigrated(voter);
                 
-                // মাইগ্রেটেড চেকবক্স অনুযায়ী ফিল্টারিং
                 if (showMigrated && !vMig) return false;
                 if (!showMigrated && vMig) return false;
 
