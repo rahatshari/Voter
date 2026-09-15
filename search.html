@@ -131,12 +131,10 @@
                 <img src="logo.png" alt="App Logo" class="app-logo" onerror="this.style.display='none'">
                 <h2>গ্রাম নির্বাচন করুন</h2>
             </div>
-            <!-- আধুনিক গ্লোবাল সার্চ আইকন -->
             <button class="global-search-icon" onclick="openGlobalSearch()" title="সকল গ্রামের তথ্য খুঁজুন">
                 🔍
             </button>
         </div>
-
         <div class="village-grid" id="villageButtons"></div>
     </div>
 
@@ -151,31 +149,25 @@
             <button class="settings-btn-dots" onclick="toggleSettings()">⋮</button>
         </div>
 
-        <!-- আধুনিক থ্রি-ডট পপআপ মেনু -->
         <div class="settings-overlay" id="settingsOverlay" onclick="closeSettings()"></div>
         <div class="settings-popup" id="settingsPopup">
             <label><input type="checkbox" id="toggleFullList" onchange="applySettings()"> 📋 সম্পূর্ণ ভোটার তালিকা দেখান</label>
             <label><input type="checkbox" id="toggleStats" onchange="applySettings()"> 📊 পেশা ভিত্তিক পরিসংখ্যান দেখান</label>
-            <!-- মাইগ্রেটেড/কর্তিত ভোটার দেখার অপশন -->
             <label class="danger-label"><input type="checkbox" id="toggleMigrated" onchange="applySettings()"> 🚫 কর্তিত/মাইগ্রেটেড ভোটার দেখুন</label>
         </div>
 
-        <!-- আধুনিক পরিসংখ্যান কার্ড -->
         <div class="stats-container" id="professionStats"></div>
         
-        <!-- সার্চ বক্স -->
         <div class="search-container">
             <input type="text" id="searchName" onkeyup="searchVoters()" placeholder="🔍 নাম...">
             <input type="text" id="searchFather" onkeyup="searchVoters()" placeholder="👤 পিতার নাম...">
             <input type="text" id="searchMother" onkeyup="searchVoters()" placeholder="👩 মাতার নাম...">
             <input type="text" id="searchDob" oninput="formatDobInput(event)" placeholder="📅 জন্ম তারিখ (যেমন: ২৩/০২/২০০১)">
             
-            <!-- স্মার্ট পেশা ড্রপডাউন (হাইড করা থাকবে) -->
             <select id="searchProfession" onchange="searchVoters()" style="display: none;">
                 <option value="">💼 সকল পেশা</option>
             </select>
             
-            <!-- স্মার্ট লিঙ্গ ফিল্টার (হাইড করা থাকবে) -->
             <select id="searchGender" onchange="searchVoters()" style="display: none;">
                 <option value="">👫 সকল ভোটার</option>
                 <option value="পুরুষ">👨 পুরুষ</option>
@@ -195,9 +187,6 @@
     <div id="toast">মেসেজ</div>
 
     <!-- ========================================================= -->
-    <!-- নিচে আপনার গ্রামের ডাটা ফাইলগুলো যুক্ত করা হলো -->
-    <!-- ========================================================= -->
-    
     <script>
         const allVotersData = {};
     </script>
@@ -206,7 +195,6 @@
     <script src="pathamara.js"></script>
     <script src="cotobadura.js"></script>
     <!-- <script src="gram3.js"></script> -->
-    <!-- <script src="gram4.js"></script> -->
 
     <!-- ========================================================= -->
 
@@ -216,7 +204,12 @@
         let isSearchScreenActive = false;
         let activeVillage = "";
 
-        // ডাটাবেসের কোথাও 'মাইগ্রেট', 'মাইগ্রেটেড' বা 'কর্তিত' আছে কিনা চেক করার ফাংশন
+        // বাংলা ফন্টের সমস্যার সমাধানের জাদুকরী কোড
+        function normalizeBengaliText(str) {
+            if (!str) return '';
+            return str.normalize('NFC').replace(/য\u09BC/g, 'য়').replace(/ড\u09BC/g, 'ড়').replace(/ঢ\u09BC/g, 'ঢ়');
+        }
+
         function isMigrated(voter) {
             if(!voter) return false;
             const str = JSON.stringify(voter).toLowerCase();
@@ -457,9 +450,9 @@
                 document.getElementById('searchProfession').value = '';
             }
 
-            const queryName = document.getElementById('searchName').value.trim();
-            const queryFather = document.getElementById('searchFather').value.trim();
-            const queryMother = document.getElementById('searchMother').value.trim();
+            const queryName = normalizeBengaliText(document.getElementById('searchName').value.trim().toLowerCase());
+            const queryFather = normalizeBengaliText(document.getElementById('searchFather').value.trim().toLowerCase());
+            const queryMother = normalizeBengaliText(document.getElementById('searchMother').value.trim().toLowerCase());
             const queryDob = document.getElementById('searchDob').value.trim();
             const queryProfession = document.getElementById('searchProfession').value.trim();
             const queryGender = document.getElementById('searchGender').value.trim();
@@ -559,9 +552,9 @@
         }
 
         function searchVotersLogic() {
-            const queryName = document.getElementById('searchName').value.toLowerCase().trim();
-            const queryFather = document.getElementById('searchFather').value.toLowerCase().trim();
-            const queryMother = document.getElementById('searchMother').value.toLowerCase().trim();
+            const queryName = normalizeBengaliText(document.getElementById('searchName').value.trim().toLowerCase());
+            const queryFather = normalizeBengaliText(document.getElementById('searchFather').value.trim().toLowerCase());
+            const queryMother = normalizeBengaliText(document.getElementById('searchMother').value.trim().toLowerCase());
             const queryDob = convertToEnglishNumbers(document.getElementById('searchDob').value.trim());
             const queryProfession = document.getElementById('searchProfession').value.trim();
             const queryGender = document.getElementById('searchGender').value.trim();
@@ -581,9 +574,9 @@
                 if (showMigrated && !vMig) return false;
                 if (!showMigrated && vMig) return false;
 
-                const vName = (voter.name || '').toLowerCase();
-                const vFather = (voter.fatherName || '').toLowerCase();
-                const vMother = (voter.motherName || '').toLowerCase();
+                const vName = normalizeBengaliText((voter.name || '').toLowerCase());
+                const vFather = normalizeBengaliText((voter.fatherName || '').toLowerCase());
+                const vMother = normalizeBengaliText((voter.motherName || '').toLowerCase());
                 const vDob = convertToEnglishNumbers(voter.dob || '');
                 const vProfession = (voter.profession || '').trim();
                 const vGender = (voter.gender || '').trim();
