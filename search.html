@@ -188,7 +188,7 @@
 
     <!-- ========================================================= -->
     <script>
-        const allVotersData = {};
+        let allVotersData = {};
     </script>
 
     <!-- আপনার আসল ডাটা ফাইলগুলো এখানে যুক্ত করুন -->
@@ -203,6 +203,10 @@
         let currentlyDisplayedData = []; 
         let isSearchScreenActive = false;
         let activeVillage = "";
+        let currentRenderOffset = 0;
+        const RENDER_BATCH_SIZE = 40;
+        let scrollObserver = null;
+        let searchDebounceTimer = null;
 
         // বাংলা ফন্টের সমস্যার সমাধানের জাদুকরী কোড
         function normalizeBengaliText(str) {
@@ -212,16 +216,61 @@
 
         function isMigrated(voter) {
             if(!voter) return false;
-            const str = JSON.stringify(voter).toLowerCase();
-            return str.includes('মাইগ্রেট') || str.includes('মাইগ্রেটেড') || str.includes('কর্তিত');
+            if (voter._isMigrated !== undefined) return voter._isMigrated;
+            // দ্রুত এবং সরাসরি ফিল্ড চেক (JSON.stringify এর চেয়ে ১০০ গুণ দ্রুত)
+            const text = ((voter.name || '') + ' ' + (voter.fatherName || '') + ' ' + (voter.address || '') + ' ' + (voter.profession || '') + ' ' + (voter.remarks || '') + ' ' + (voter.serialNo || '')).toLowerCase();
+            return text.includes('মাইগ্রেট') || text.includes('মাইগ্রেটেড') || text.includes('কর্তিত');
+        }
+
+        // দ্রুত সার্চ এবং মেমোরি পারফরম্যান্সের জন্য ডাটা একবারে প্রসেস করে ক্যাশ করা
+        function prepareVoterData() {
+            for (let village in allVotersData) {
+                let voters = allVotersData[village] || [];
+                for (let i = 0; i < voters.length; i++) {
+                    let v = voters[i];
+                    if (v._prepared) continue;
+                    v._isMigrated = isMigrated(v);
+                    v._normName = normalizeBengaliText((v.name || '').toLowerCase());
+                    v._normFather = normalizeBengaliText((v.fatherName || '').toLowerCase());
+                    v._normMother = normalizeBengaliText((v.motherName || '').toLowerCase());
+                    v._normDob = convertToEnglishNumbers(v.dob || '');
+                    v._age = calculateAge(v.dob);
+                    v._profession = (v.profession || '').trim();
+                    v._gender = (v.gender || '').trim();
+                    v.villageName = v.villageName || village;
+                    v._prepared = true;
+                }
+            }
+        }
+
+        async function loadVillagesFromAPI() {
+            try {
+                const response = await fetch('/api/villages-data');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && Object.keys(data).length > 0) {
+                        allVotersData = data;
+                        prepareVoterData();
+                        setupVillages();
+                        if (isSearchScreenActive && activeVillage && allVotersData[activeVillage]) {
+                            currentVillageData = allVotersData[activeVillage];
+                            applySettings(true);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.log("Local static fallback used");
+            }
         }
 
         window.onload = function() {
             if (!history.state) {
                 history.replaceState({view: 'home'}, 'Home', window.location.pathname);
             }
+            prepareVoterData();
             setupVillages();
             restoreAppState(); 
+            loadVillagesFromAPI();
         };
 
         window.addEventListener('popstate', function(event) {
@@ -357,11 +406,17 @@
             
             villageNames.forEach(village => {
                 const dataArray = allVotersData[village] || [];
-                const activeCount = dataArray.filter(v => !isMigrated(v)).length;
-                
+                const activeCount = dataArray.filter(v => v._isMigrated !== undefined ? !v._isMigrated : !isMigrated(v)).length;
+                const malesCount = dataArray.filter(v => v._gender === 'পুরুষ').length;
+                const femalesCount = dataArray.filter(v => v._gender === 'মহিলা').length;
+                let genderText = '';
+                if (malesCount > 0 || femalesCount > 0) {
+                    genderText = `<span style="font-size: 11px; color: #64748b; margin-top: 3px;">👨 ${convertToBengaliNumbers(malesCount)} | 👩 ${convertToBengaliNumbers(femalesCount)}</span>`;
+                }
+
                 const btn = document.createElement('button');
                 btn.className = 'village-btn';
-                btn.innerHTML = `<span style="font-size: 22px;">📍</span> ${village} <span style="font-size: 14px; background: #e2e8f0; padding: 4px 12px; border-radius: 20px; color: #475569; margin-top: 5px;">${convertToBengaliNumbers(activeCount)} জন</span>`;
+                btn.innerHTML = `<span style="font-size: 22px;">📍</span> ${village} <span style="font-size: 14px; background: #e2e8f0; padding: 4px 12px; border-radius: 20px; color: #475569; margin-top: 5px;">${convertToBengaliNumbers(activeCount)} জন</span>${genderText}`;
                 btn.onclick = () => {
                     openSearchScreen(village, allVotersData[village] || [], village);
                 };
@@ -370,15 +425,16 @@
         }
 
         function openGlobalSearch(isRestoring = false) {
+            prepareVoterData();
             let allData = [];
             for (let village in allVotersData) {
                 let voters = allVotersData[village] || [];
-                voters.forEach(v => {
-                    allData.push({ ...v, villageName: village }); 
-                });
+                for (let i = 0; i < voters.length; i++) {
+                    allData.push(voters[i]);
+                }
             }
             if(allData.length === 0) {
-                alert("দুঃখিত, এখনো কোনো গ্রামের তথ্য যুক্ত করা হয়নি!");
+                showToast("দুঃখিত, এখনো কোনো গ্রামের তথ্য যুক্ত করা হয়নি!");
                 return;
             }
             openSearchScreen("সকল গ্রাম", allData, "all", isRestoring);
@@ -389,8 +445,8 @@
             let currentSelection = profSelect.value;
             profSelect.innerHTML = '<option value="">💼 সকল পেশা</option>';
             
-            const activeData = currentVillageData.filter(v => !isMigrated(v));
-            const uniqueProfs = [...new Set(activeData.map(v => v.profession ? v.profession.trim() : 'পেশা দেওয়া নেই'))].filter(p => p !== 'nan' && p !== 'পেশা দেওয়া নেই');
+            const activeData = currentVillageData.filter(v => v._isMigrated !== undefined ? !v._isMigrated : !isMigrated(v));
+            const uniqueProfs = [...new Set(activeData.map(v => v._profession || 'পেশা দেওয়া নেই'))].filter(p => p !== 'nan' && p !== 'পেশা দেওয়া নেই');
             
             uniqueProfs.sort().forEach(p => {
                 profSelect.innerHTML += `<option value="${p}">${p}</option>`;
@@ -463,11 +519,11 @@
                 let baseData = currentVillageData;
                 
                 if (showMigrated) {
-                    baseData = currentVillageData.filter(v => isMigrated(v));
+                    baseData = currentVillageData.filter(v => v._isMigrated !== undefined ? v._isMigrated : isMigrated(v));
                     displayVoters(baseData);
                 } 
                 else if(showFullList) {
-                    baseData = currentVillageData.filter(v => !isMigrated(v));
+                    baseData = currentVillageData.filter(v => v._isMigrated !== undefined ? !v._isMigrated : !isMigrated(v));
                     displayVoters(baseData);
                 } 
                 else {
@@ -484,13 +540,13 @@
             const statsDiv = document.getElementById('professionStats');
             statsDiv.style.display = 'block';
             
-            const activeData = currentVillageData.filter(v => !isMigrated(v));
+            const activeData = currentVillageData.filter(v => v._isMigrated !== undefined ? !v._isMigrated : !isMigrated(v));
             if(activeData.length === 0){
                 statsDiv.innerHTML = "<h3>এই গ্রামের কোনো ডাটা নেই</h3>"; return;
             }
             const counts = {};
             activeData.forEach(v => {
-                let prof = v.profession ? v.profession.trim() : '';
+                let prof = v._profession || '';
                 if(prof === '' || prof === 'nan') prof = 'পেশা দেওয়া নেই';
                 counts[prof] = (counts[prof] || 0) + 1;
             });
@@ -504,19 +560,41 @@
         function displayVoters(data) {
             const container = document.getElementById('voterListContainer');
             currentlyDisplayedData = data; 
+            currentRenderOffset = 0;
+            if (scrollObserver) {
+                scrollObserver.disconnect();
+                scrollObserver = null;
+            }
+
             if (data.length === 0) {
                 container.innerHTML = '<div class="no-data">কোনো তথ্য পাওয়া যায়নি ❌</div>';
                 return;
             }
             document.getElementById('resultCount').innerHTML = `✅ পাওয়া গেছে: <b>${convertToBengaliNumbers(data.length)}</b> জন`;
+            container.innerHTML = '';
+            renderNextBatch();
+        }
+
+        function renderNextBatch() {
+            const container = document.getElementById('voterListContainer');
             
+            const existingSentinel = document.getElementById('loadMoreSentinel');
+            if (existingSentinel) {
+                existingSentinel.remove();
+            }
+
+            if (currentRenderOffset >= currentlyDisplayedData.length) return;
+
+            const nextBatch = currentlyDisplayedData.slice(currentRenderOffset, currentRenderOffset + RENDER_BATCH_SIZE);
             let htmlString = '';
-            data.forEach((voter, index) => {
-                let calculatedAge = calculateAge(voter.dob);
+            
+            nextBatch.forEach((voter, i) => {
+                const index = currentRenderOffset + i;
+                let calculatedAge = voter._age !== undefined ? voter._age : calculateAge(voter.dob);
                 let ageHtml = calculatedAge ? `<span class="age-badge">${calculatedAge}</span>` : '';
                 let villageBadgeHtml = voter.villageName ? `<span class="village-badge">📍 ${voter.villageName}</span>` : '';
                 
-                let isMig = isMigrated(voter);
+                let isMig = voter._isMigrated !== undefined ? voter._isMigrated : isMigrated(voter);
                 let cardClass = isMig ? "voter-card migrated-card" : "voter-card";
                 let titleClass = isMig ? "voter-title migrated-title" : "voter-title";
                 let statusBadge = isMig ? `<div class="migrated-badge">🚫 স্থানান্তরিত/কর্তিত</div>` : '';
@@ -548,7 +626,38 @@
                     </div>
                 </div>`;
             });
-            container.innerHTML = htmlString;
+
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlString;
+            while (tempDiv.firstChild) {
+                container.appendChild(tempDiv.firstChild);
+            }
+
+            currentRenderOffset += nextBatch.length;
+
+            if (currentRenderOffset < currentlyDisplayedData.length) {
+                const remaining = currentlyDisplayedData.length - currentRenderOffset;
+                const sentinel = document.createElement('div');
+                sentinel.id = 'loadMoreSentinel';
+                sentinel.style.cssText = 'text-align: center; margin: 15px 0 25px 0;';
+                sentinel.innerHTML = `
+                    <button id="loadMoreBtn" style="background: var(--primary); color: white; border: none; padding: 10px 22px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25);">
+                        আরও দেখুন (বাকি ${convertToBengaliNumbers(remaining)} জন) ⬇️
+                    </button>
+                `;
+                sentinel.querySelector('#loadMoreBtn').onclick = () => renderNextBatch();
+                container.appendChild(sentinel);
+
+                if ('IntersectionObserver' in window) {
+                    if (scrollObserver) scrollObserver.disconnect();
+                    scrollObserver = new IntersectionObserver((entries) => {
+                        if (entries[0].isIntersecting) {
+                            renderNextBatch();
+                        }
+                    }, { rootMargin: '350px' });
+                    scrollObserver.observe(sentinel);
+                }
+            }
         }
 
         function searchVotersLogic() {
@@ -569,27 +678,19 @@
             }
             
             const filteredData = currentVillageData.filter(voter => {
-                const vMig = isMigrated(voter);
+                const vMig = voter._isMigrated !== undefined ? voter._isMigrated : isMigrated(voter);
                 
                 if (showMigrated && !vMig) return false;
                 if (!showMigrated && vMig) return false;
 
-                const vName = normalizeBengaliText((voter.name || '').toLowerCase());
-                const vFather = normalizeBengaliText((voter.fatherName || '').toLowerCase());
-                const vMother = normalizeBengaliText((voter.motherName || '').toLowerCase());
-                const vDob = convertToEnglishNumbers(voter.dob || '');
-                const vProfession = (voter.profession || '').trim();
-                const vGender = (voter.gender || '').trim();
+                if (queryName && (!voter._normName || !voter._normName.includes(queryName))) return false;
+                if (queryFather && (!voter._normFather || !voter._normFather.includes(queryFather))) return false;
+                if (queryMother && (!voter._normMother || !voter._normMother.includes(queryMother))) return false;
+                if (queryDob && (!voter._normDob || !voter._normDob.includes(queryDob))) return false;
+                if (queryProfession && voter._profession !== queryProfession) return false;
+                if (queryGender && voter._gender !== queryGender) return false;
 
-                const matchesText = vName.includes(queryName) && 
-                                    vFather.includes(queryFather) && 
-                                    vMother.includes(queryMother) && 
-                                    vDob.includes(queryDob);
-                
-                const matchesProfession = (queryProfession === "") || (vProfession === queryProfession);
-                const matchesGender = (queryGender === "") || (vGender === queryGender);
-
-                return matchesText && matchesProfession && matchesGender;
+                return true;
             });
             
             if(filteredData.length === 0) {
@@ -599,11 +700,15 @@
         }
 
         function searchVoters() {
-            searchVotersLogic();
-            saveAppState();
+            if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                searchVotersLogic();
+                saveAppState();
+            }, 120);
         }
 
         function clearSearch(skipSave = false) {
+            if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
             ['searchName', 'searchFather', 'searchMother', 'searchDob'].forEach(id => document.getElementById(id).value = '');
             document.getElementById('searchProfession').value = '';
             document.getElementById('searchGender').value = '';
@@ -626,8 +731,8 @@
             textArea.value = text;
             textArea.style.position = "fixed"; document.body.appendChild(textArea);
             textArea.focus(); textArea.select();
-            try { document.execCommand('copy') ? showToast("✅ তথ্য কপি হয়েছে!") : alert("কপি করা সম্ভব হয়নি!"); } 
-            catch (err) { alert("কপি সাপোর্ট করছে মহাশয়!"); }
+            try { document.execCommand('copy') ? showToast("✅ তথ্য কপি হয়েছে!") : showToast("কপি করা সম্ভব হয়নি!"); } 
+            catch (err) { showToast("কপি সাপোর্ট করছে না!"); }
             document.body.removeChild(textArea);
         }
 

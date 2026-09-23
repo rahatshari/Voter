@@ -1,0 +1,7 @@
+{
+  "name": "ইউনিয়ন ভোটার তালিকা",
+  "description": "ইউনিয়ন ভোটার তালিকা ও ভোটার অনুসন্ধান অ্যাপ্লিকেশন",
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
