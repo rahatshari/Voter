@@ -114,6 +114,7 @@
         #toast.show { visibility: visible; animation: fadein 0.3s, fadeout 0.3s 2.5s; }
         @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
         @keyframes fadeout { from { bottom: 30px; opacity: 1; } to { bottom: 0; opacity: 0; } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
         @media (max-width: 480px) {
             body { padding: 5px; }
@@ -124,16 +125,31 @@
 </head>
 <body>
 
+    <!-- অথেনটিকেশন চেকিং স্ক্রিন (লগইন ছাড়া প্রবেশ সম্পূর্ণ নিষিদ্ধ) -->
+    <div id="authCheckingScreen" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; text-align: center; padding: 20px; font-family: 'Noto Sans Bengali', sans-serif;">
+        <div style="width: 48px; height: 48px; border: 4px solid #e2e8f0; border-top-color: #4f46e5; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 18px;"></div>
+        <h3 id="authTitle" style="color: #1e293b; font-size: 18px; margin-bottom: 8px;">নিরাপত্তা যাচাই করা হচ্ছে...</h3>
+        <p id="authStatusText" style="color: #64748b; font-size: 14px;">লগইন ছাড়া প্রবেশ নিষিদ্ধ। অনুগ্রহ করে অপেক্ষা করুন...</p>
+    </div>
+
     <!-- হোম স্ক্রিন -->
-    <div id="homeScreen" class="container">
+    <div id="homeScreen" class="container" style="display: none;">
         <div class="home-header">
             <div class="home-header-left">
                 <img src="logo.png" alt="App Logo" class="app-logo" onerror="this.style.display='none'">
-                <h2>গ্রাম নির্বাচন করুন</h2>
+                <div>
+                    <h2>গ্রাম নির্বাচন করুন</h2>
+                    <span id="userEmailBadge" style="font-size: 11px; color: #64748b; font-weight: 600;"></span>
+                </div>
             </div>
-            <button class="global-search-icon" onclick="openGlobalSearch()" title="সকল গ্রামের তথ্য খুঁজুন">
-                🔍
-            </button>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button class="global-search-icon" onclick="openGlobalSearch()" title="সকল গ্রামের তথ্য খুঁজুন">
+                    🔍
+                </button>
+                <button onclick="handleLogout()" style="background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;" title="লগআউট">
+                    🚪 লগআউট
+                </button>
+            </div>
         </div>
         <div class="village-grid" id="villageButtons"></div>
     </div>
@@ -154,6 +170,10 @@
             <label><input type="checkbox" id="toggleFullList" onchange="applySettings()"> 📋 সম্পূর্ণ ভোটার তালিকা দেখান</label>
             <label><input type="checkbox" id="toggleStats" onchange="applySettings()"> 📊 পেশা ভিত্তিক পরিসংখ্যান দেখান</label>
             <label class="danger-label"><input type="checkbox" id="toggleMigrated" onchange="applySettings()"> 🚫 কর্তিত/মাইগ্রেটেড ভোটার দেখুন</label>
+            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 6px 0;">
+            <button onclick="handleLogout()" style="background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%;">
+                🚪 লগআউট করুন
+            </button>
         </div>
 
         <div class="stats-container" id="professionStats"></div>
@@ -184,7 +204,149 @@
         </div>
     </div>
 
+    <!-- কাস্টম লগআউট কনফার্মেশন মোডাল -->
+    <div id="logoutModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 99999; justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: white; width: 100%; max-width: 330px; border-radius: 16px; padding: 22px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.25);">
+            <div style="font-size: 38px; margin-bottom: 8px;">🚪</div>
+            <h3 style="font-size: 18px; color: #1e293b; margin-bottom: 8px; font-weight: 700;">লগআউট নিশ্চিতকরণ</h3>
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">আপনি কি নিশ্চিতভাবে ভোটার অ্যাপ থেকে লগআউট করতে চান?</p>
+            <div style="display: flex; gap: 10px;">
+                <button type="button" id="cancelLogoutBtn" onclick="closeLogoutModal()" style="flex: 1; padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 8px; font-weight: 600; cursor: pointer; color: #475569; font-size: 13px;">না, বাতিল</button>
+                <button type="button" id="confirmLogoutBtn" onclick="executeLogoutNow()" style="flex: 1; padding: 10px; border: none; background: #dc2626; color: white; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 13px;">হ্যাঁ, লগআউট</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- অন্য ডিভাইসে লগইন নোটিফিকেশন মোডাল (পদ্ধতি ১: সিঙ্গেল সেশন গার্ড) -->
+    <div id="anotherDeviceModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); z-index: 100000; justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: white; width: 100%; max-width: 340px; border-radius: 18px; padding: 26px 20px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4);">
+            <div style="width: 60px; height: 60px; background: #fee2e2; color: #dc2626; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 16px;">⚠️</div>
+            <h3 style="font-size: 18px; color: #991b1b; margin-bottom: 10px; font-weight: 700;">অন্য ডিভাইসে লগইন হয়েছে!</h3>
+            <p style="font-size: 13.5px; color: #475569; line-height: 1.5; margin-bottom: 18px;">
+                আপনার এই জিমেইল অ্যাকাউন্টটি এইমাত্র অন্য একটি মোবাইলে লগইন করা হয়েছে।<br><br>
+                নিরাপত্তার কারণে <b>একটি জিমেইল দিয়ে একই সাথে একটিমাত্র মোবাইলেই</b> ব্যবহার করা যাবে।
+            </p>
+            <div id="redirectCounterText" style="font-size: 12px; color: #64748b; margin-bottom: 14px; font-weight: 600;">লগইন স্ক্রিনে রিডাইরেক্ট করা হচ্ছে...</div>
+            <button type="button" onclick="goToLoginPageAfterKick()" style="width: 100%; padding: 12px; border: none; background: #dc2626; color: white; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 14px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);">লগইন পেজে যান</button>
+        </div>
+    </div>
+
     <div id="toast">মেসেজ</div>
+
+    <script>
+        function openLogoutModal() {
+            if (typeof closeSettings === 'function') closeSettings();
+            const modal = document.getElementById('logoutModal');
+            if (modal) modal.style.display = 'flex';
+        }
+        function closeLogoutModal() {
+            const modal = document.getElementById('logoutModal');
+            if (modal) modal.style.display = 'none';
+        }
+        window.openLogoutModal = openLogoutModal;
+        window.closeLogoutModal = closeLogoutModal;
+        window.handleLogout = openLogoutModal;
+
+        let sessionCheckInterval = null;
+
+        function showAnotherDeviceKickedModal() {
+            if (sessionCheckInterval) clearInterval(sessionCheckInterval);
+            const modal = document.getElementById('anotherDeviceModal');
+            if (modal) modal.style.display = 'flex';
+            localStorage.removeItem('voter_device_session_id');
+            localStorage.removeItem('voterAppSavedState');
+            if (typeof window.authSignOutDirectly === 'function') {
+                window.authSignOutDirectly();
+            }
+            let count = 4;
+            const counterEl = document.getElementById('redirectCounterText');
+            const timer = setInterval(() => {
+                count--;
+                if (counterEl) counterEl.innerText = count + " সেকেন্ডের মধ্যে লগইন পেজে নেওয়া হবে...";
+                if (count <= 0) {
+                    clearInterval(timer);
+                    goToLoginPageAfterKick();
+                }
+            }, 1000);
+        }
+
+        function goToLoginPageAfterKick() {
+            window.location.replace("index.html?logged_out=another_device");
+        }
+        window.goToLoginPageAfterKick = goToLoginPageAfterKick;
+    </script>
+
+    <!-- ========================================================= -->
+    <!-- Firebase Auth সিকিউরিটি গার্ড (লগইন ছাড়া ভেতরে ঢোকা সম্পূর্ণ বন্ধ) -->
+    <!-- ========================================================= -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDSE5kxWXULnlTB2sOY7AE6MLFLmHuguWg",
+            authDomain: "voter-apps-14962.firebaseapp.com",
+            projectId: "voter-apps-14962",
+            storageBucket: "voter-apps-14962.firebasestorage.app",
+            messagingSenderId: "957567395353",
+            appId: "1:957567395353:android:84aad0acdb14a8a343ec88"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        window.authSignOutDirectly = function() {
+            signOut(auth).catch(() => {});
+        };
+
+        window.executeLogoutNow = async function() {
+            const btn = document.getElementById('confirmLogoutBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = "লগআউট হচ্ছে...";
+            }
+            if (sessionCheckInterval) clearInterval(sessionCheckInterval);
+            sessionStorage.setItem('logged_out', '1');
+            const mySessionId = localStorage.getItem('voter_device_session_id');
+            const userEmail = auth.currentUser ? auth.currentUser.email : '';
+            localStorage.removeItem('voter_device_session_id');
+            localStorage.removeItem('voterAppSavedState');
+
+            if (userEmail && mySessionId) {
+                try {
+                    await fetch('/api/session/logout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: userEmail, sessionId: mySessionId })
+                    });
+                } catch(e) {}
+            }
+
+            try {
+                await signOut(auth);
+            } catch (err) {
+                console.error("SignOut error:", err);
+            }
+            window.location.replace("index.html?logged_out=1");
+        };
+
+        // লগইন চেক: ইউজার লগইন ছাড়া কোনোভাবেই পেজে ঢুকতে পারবে না
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                const statusEl = document.getElementById('authStatusText');
+                if (statusEl) statusEl.innerText = "লগইন করা নেই! লগইন পেজে নিয়ে যাওয়া হচ্ছে...";
+                setTimeout(() => {
+                    window.location.replace("index.html");
+                }, 350);
+            } else {
+                if (typeof window.initAppAfterAuth === 'function') {
+                    window.initAppAfterAuth(user);
+                } else {
+                    window._pendingAuthUser = user;
+                }
+            }
+        });
+    </script>
 
     <!-- ========================================================= -->
     <script>
@@ -207,6 +369,73 @@
         const RENDER_BATCH_SIZE = 40;
         let scrollObserver = null;
         let searchDebounceTimer = null;
+        let isAppReady = false;
+
+        window.initAppAfterAuth = function(user) {
+            if (isAppReady) return;
+            isAppReady = true;
+
+            const authScreen = document.getElementById('authCheckingScreen');
+            if (authScreen) authScreen.style.display = 'none';
+
+            const emailBadge = document.getElementById('userEmailBadge');
+            if (emailBadge && user && user.email) {
+                emailBadge.innerText = user.email;
+            }
+
+            // পদ্ধতি ১: একক ডিভাইস সেশন গার্ড
+            let mySessionId = localStorage.getItem('voter_device_session_id');
+            if (!mySessionId) {
+                mySessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 10);
+                localStorage.setItem('voter_device_session_id', mySessionId);
+            }
+
+            if (user && user.email) {
+                // সার্ভারে সেশন রেজিস্টার নিশ্চিত করা
+                fetch('/api/session/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: user.email, sessionId: mySessionId })
+                }).catch(() => {});
+
+                // প্রতি ৩ সেকেন্ড পর পর যাচাই করবে অন্য কোনো মোবাইল থেকে এই আইডি দিয়ে ঢোকা হয়েছে কিনা
+                if (sessionCheckInterval) clearInterval(sessionCheckInterval);
+                sessionCheckInterval = setInterval(async () => {
+                    const currentSid = localStorage.getItem('voter_device_session_id');
+                    if (!currentSid) return;
+                    try {
+                        const res = await fetch(`/api/session/validate?email=${encodeURIComponent(user.email)}&sessionId=${encodeURIComponent(currentSid)}`);
+                        if (res.ok) {
+                            const data = await res.json();
+                            if (data.isValid === false && data.reason === 'another_device_logged_in') {
+                                showAnotherDeviceKickedModal();
+                            }
+                        }
+                    } catch (e) {}
+                }, 3000);
+            }
+
+            if (!history.state) {
+                history.replaceState({view: 'home'}, 'Home', window.location.pathname);
+            }
+            prepareVoterData();
+            setupVillages();
+            restoreAppState(); 
+            loadVillagesFromAPI();
+        };
+
+        if (window._pendingAuthUser) {
+            window.initAppAfterAuth(window._pendingAuthUser);
+        }
+
+        setTimeout(() => {
+            if (!isAppReady) {
+                const statusEl = document.getElementById('authStatusText');
+                if (statusEl) {
+                    statusEl.innerHTML = `লগইন স্ট্যাটাস পাওয়া যাচ্ছে না। <a href="index.html" style="color: #4f46e5; font-weight: bold; text-decoration: underline;">লগইন পেজে যান</a>`;
+                }
+            }
+        }, 7000);
 
         // বাংলা ফন্টের সমস্যার সমাধানের জাদুকরী কোড
         function normalizeBengaliText(str) {
@@ -263,16 +492,6 @@
             }
         }
 
-        window.onload = function() {
-            if (!history.state) {
-                history.replaceState({view: 'home'}, 'Home', window.location.pathname);
-            }
-            prepareVoterData();
-            setupVillages();
-            restoreAppState(); 
-            loadVillagesFromAPI();
-        };
-
         window.addEventListener('popstate', function(event) {
             if (isSearchScreenActive) {
                 goBackLogic_internal();
@@ -280,8 +499,11 @@
         });
 
         function goBackUI() {
-            if(isSearchScreenActive) {
-                history.back(); 
+            if (isSearchScreenActive) {
+                goBackLogic_internal();
+                if (window.location.hash === '#search') {
+                    history.replaceState({view: 'home'}, 'Home', window.location.pathname);
+                }
             }
         }
 
@@ -364,6 +586,7 @@
 
         function restoreAppState() {
             const saved = localStorage.getItem('voterAppSavedState');
+            let restored = false;
             if (saved) {
                 try {
                     const state = JSON.parse(saved);
@@ -389,8 +612,13 @@
                             document.getElementById('searchGender').value = state.search.gender || '';
                             searchVotersLogic();
                         }, 50);
+                        restored = true;
                     }
                 } catch(e) {}
+            }
+            if (!restored) {
+                document.getElementById('homeScreen').style.display = 'block';
+                document.getElementById('searchScreen').style.display = 'none';
             }
         }
 

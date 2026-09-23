@@ -10,8 +10,35 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0';
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // Serve static assets from root
 app.use(express.static(__dirname));
+
+// Single Active Device Session Store
+const SESSIONS_FILE = path.join(__dirname, 'sessions.json');
+let activeSessions = {};
+
+function loadSessions() {
+  try {
+    if (fs.existsSync(SESSIONS_FILE)) {
+      activeSessions = JSON.parse(fs.readFileSync(SESSIONS_FILE, 'utf8'));
+    }
+  } catch (e) {
+    activeSessions = {};
+  }
+}
+
+function saveSessions() {
+  try {
+    fs.writeFileSync(SESSIONS_FILE, JSON.stringify(activeSessions, null, 2), 'utf8');
+  } catch (e) {
+    console.error('Error saving sessions:', e.message);
+  }
+}
+
+loadSessions();
 
 // Function to scan and load villages from JSON folders
 function loadVillagesData() {
@@ -140,6 +167,75 @@ app.get('/api/villages', (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'Failed to load villages summary' });
   }
+});
+
+// Single Active Device Session API
+// 1. Register or takeover active session for an email
+app.post('/api/session/register', (req, res) => {
+  const { email, sessionId, deviceName } = req.body || {};
+  if (!email || !sessionId) {
+    return res.status(400).json({ error: 'Email and sessionId are required' });
+  }
+  const cleanEmail = String(email).trim().toLowerCase();
+  activeSessions[cleanEmail] = {
+    sessionId: String(sessionId),
+    email: cleanEmail,
+    deviceName: deviceName || 'Mobile',
+    registeredAt: Date.now(),
+    lastActive: Date.now()
+  };
+  saveSessions();
+  res.json({ success: true, sessionId: String(sessionId) });
+});
+
+// 2. Validate whether current session is still the single active session
+app.get('/api/session/validate', (req, res) => {
+  const email = req.query.email;
+  const sessionId = req.query.sessionId;
+
+  if (!email || !sessionId) {
+    return res.status(400).json({ isValid: false, reason: 'missing_params' });
+  }
+
+  const cleanEmail = String(email).trim().toLowerCase();
+  const current = activeSessions[cleanEmail];
+
+  if (!current) {
+    // If no session recorded yet, adopt this current session
+    activeSessions[cleanEmail] = {
+      sessionId: String(sessionId),
+      email: cleanEmail,
+      registeredAt: Date.now(),
+      lastActive: Date.now()
+    };
+    saveSessions();
+    return res.json({ isValid: true });
+  }
+
+  if (current.sessionId === String(sessionId)) {
+    current.lastActive = Date.now();
+    return res.json({ isValid: true });
+  }
+
+  // Another device logged in and took over!
+  return res.json({
+    isValid: false,
+    reason: 'another_device_logged_in',
+    registeredAt: current.registeredAt
+  });
+});
+
+// 3. Terminate session on manual logout
+app.post('/api/session/logout', (req, res) => {
+  const { email, sessionId } = req.body || {};
+  if (email) {
+    const cleanEmail = String(email).trim().toLowerCase();
+    if (activeSessions[cleanEmail] && (!sessionId || activeSessions[cleanEmail].sessionId === String(sessionId))) {
+      delete activeSessions[cleanEmail];
+      saveSessions();
+    }
+  }
+  res.json({ success: true });
 });
 
 // Route handlers
