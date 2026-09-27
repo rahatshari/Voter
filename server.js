@@ -40,10 +40,51 @@ function saveSessions() {
 
 loadSessions();
 
-// Function to scan and load villages from JSON folders
+// Function to scan and load villages from single JSON files or folders
 function loadVillagesData() {
   const villagesData = {};
   const processedVillages = new Set();
+
+  function processSingleVillageFile(filePath) {
+    if (!fs.existsSync(filePath) || !filePath.endsWith('.json')) return;
+    const baseName = path.basename(filePath);
+    if (baseName === 'villages.json' || baseName === 'sessions.json' || baseName === 'package.json' || baseName === 'metadata.json' || baseName === 'manifest.json' || baseName.startsWith('.')) return;
+
+    try {
+      const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      let villageName = '';
+      let voters = [];
+
+      if (Array.isArray(content) && content.length > 0 && typeof content[0] === 'object' && content[0] !== null) {
+        voters = content;
+        villageName = voters[0]?.villageName || path.basename(filePath, '.json');
+      } else if (content && typeof content === 'object') {
+        villageName = content.villageName || content.name || path.basename(filePath, '.json');
+        if (Array.isArray(content.voters)) {
+          voters = content.voters;
+        } else if (Array.isArray(content.data)) {
+          voters = content.data;
+        }
+      }
+
+      if (voters.length > 0 && villageName) {
+        // Bengali village name normalization mapping if filename is english
+        if (villageName === 'pathamara') villageName = 'পাঠামারা';
+        if (villageName === 'cotobadura') villageName = 'ছোট বাদুরা';
+
+        const standardized = voters.map(v => ({
+          ...v,
+          gender: v.gender || 'পুরুষ',
+          villageName: v.villageName || villageName
+        }));
+
+        villagesData[villageName] = standardized;
+        processedVillages.add(villageName);
+      }
+    } catch (e) {
+      console.error(`Error reading village JSON file ${filePath}:`, e.message);
+    }
+  }
 
   function scanFolder(dirPath, defaultName) {
     if (!fs.existsSync(dirPath) || !fs.statSync(dirPath).isDirectory()) return;
@@ -114,22 +155,26 @@ function loadVillagesData() {
     }
   }
 
-  // 1. Scan /villages subdirectories
+  // 1. Scan single JSON files in /villages directory first (Primary)
   const villagesDir = path.join(__dirname, 'villages');
   if (fs.existsSync(villagesDir)) {
     const entries = fs.readdirSync(villagesDir, { withFileTypes: true });
     for (const entry of entries) {
-      if (entry.isDirectory() && !entry.name.startsWith('_')) {
+      if (entry.isFile() && entry.name.endsWith('.json') && !entry.name.startsWith('_')) {
+        processSingleVillageFile(path.join(villagesDir, entry.name));
+      } else if (entry.isDirectory() && !entry.name.startsWith('_')) {
         scanFolder(path.join(villagesDir, entry.name), entry.name);
       }
     }
   }
 
-  // 2. Scan root folders (like ./pathamara, ./cotobadura)
+  // 2. Scan root single JSON files or folders as fallback
   const ignoredRoot = new Set(['node_modules', '.git', 'villages', 'public', 'dist', 'build']);
   const rootEntries = fs.readdirSync(__dirname, { withFileTypes: true });
   for (const entry of rootEntries) {
-    if (entry.isDirectory() && !ignoredRoot.has(entry.name) && !entry.name.startsWith('.')) {
+    if (entry.isFile() && entry.name.endsWith('.json') && !entry.name.startsWith('.')) {
+      processSingleVillageFile(path.join(__dirname, entry.name));
+    } else if (entry.isDirectory() && !ignoredRoot.has(entry.name) && !entry.name.startsWith('.')) {
       scanFolder(path.join(__dirname, entry.name), entry.name);
     }
   }

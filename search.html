@@ -353,10 +353,7 @@
         let allVotersData = {};
     </script>
 
-    <!-- আপনার আসল ডাটা ফাইলগুলো এখানে যুক্ত করুন -->
-    <script src="pathamara.js"></script>
-    <script src="cotobadura.js"></script>
-    <!-- <script src="gram3.js"></script> -->
+    <!-- ডাটা ফাইলগুলো সরাসরি villages/*.json থেকে সার্ভার এপিআই এর মাধ্যমে স্বয়ংক্রিয়ভাবে লোড হবে -->
 
     <!-- ========================================================= -->
 
@@ -371,12 +368,13 @@
         let searchDebounceTimer = null;
         let isAppReady = false;
 
-        window.initAppAfterAuth = function(user) {
+        window.initAppAfterAuth = async function(user) {
             if (isAppReady) return;
             isAppReady = true;
 
             const authScreen = document.getElementById('authCheckingScreen');
-            if (authScreen) authScreen.style.display = 'none';
+            const statusEl = document.getElementById('authStatusText');
+            if (statusEl) statusEl.innerText = "ভোটার ডাটা লোড হচ্ছে...";
 
             const emailBadge = document.getElementById('userEmailBadge');
             if (emailBadge && user && user.email) {
@@ -415,13 +413,17 @@
                 }, 3000);
             }
 
+            // villages ফোল্ডারের JSON ফাইল থেকে ভোটার ডাটা লোড করা
+            await loadVillagesFromAPI();
+
+            if (authScreen) authScreen.style.display = 'none';
+
             if (!history.state) {
                 history.replaceState({view: 'home'}, 'Home', window.location.pathname);
             }
             prepareVoterData();
             setupVillages();
             restoreAppState(); 
-            loadVillagesFromAPI();
         };
 
         if (window._pendingAuthUser) {
@@ -479,17 +481,79 @@
                     const data = await response.json();
                     if (data && Object.keys(data).length > 0) {
                         allVotersData = data;
-                        prepareVoterData();
-                        setupVillages();
-                        if (isSearchScreenActive && activeVillage && allVotersData[activeVillage]) {
-                            currentVillageData = allVotersData[activeVillage];
-                            applySettings(true);
-                        }
+                        return;
                     }
                 }
             } catch (err) {
                 console.log("Local static fallback used");
             }
+
+            // অফলাইন বা সরাসরি GitHub Pages স্ট্যাটিক ফোল্ডার ফলব্যাক
+            try {
+                let villageFolders = [
+                    "pathamara",
+                    "cotobadura",
+                    "village_3",
+                    "village_4",
+                    "village_5",
+                    "village_6",
+                    "village_7",
+                    "village_8",
+                    "village_9"
+                ];
+
+                try {
+                    const vfRes = await fetch('villages/villages.json');
+                    if (vfRes.ok) {
+                        const customFolders = await vfRes.json();
+                        if (Array.isArray(customFolders) && customFolders.length > 0) {
+                            villageFolders = customFolders;
+                        }
+                    }
+                } catch(e) {}
+
+                for (const folder of villageFolders) {
+                    try {
+                        let villageName = folder;
+                        // info.json থেকে নাম পড়া
+                        try {
+                            const infoRes = await fetch(`villages/${folder}/info.json`);
+                            if (infoRes.ok) {
+                                const info = await infoRes.json();
+                                if (info && info.name) villageName = info.name;
+                            }
+                        } catch(e) {}
+
+                        let voters = [];
+
+                        // male.json পড়া
+                        try {
+                            const maleRes = await fetch(`villages/${folder}/male.json`);
+                            if (maleRes.ok) {
+                                const males = await maleRes.json();
+                                if (Array.isArray(males)) {
+                                    voters.push(...males.map(v => ({ ...v, gender: v.gender || 'পুরুষ', villageName })));
+                                }
+                            }
+                        } catch(e) {}
+
+                        // female.json পড়া
+                        try {
+                            const femaleRes = await fetch(`villages/${folder}/female.json`);
+                            if (femaleRes.ok) {
+                                const females = await femaleRes.json();
+                                if (Array.isArray(females)) {
+                                    voters.push(...females.map(v => ({ ...v, gender: v.gender || 'মহিলা', villageName })));
+                                }
+                            }
+                        } catch(e) {}
+
+                        if (voters.length > 0) {
+                            allVotersData[villageName] = voters;
+                        }
+                    } catch(e) {}
+                }
+            } catch(e) {}
         }
 
         window.addEventListener('popstate', function(event) {
