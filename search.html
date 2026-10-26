@@ -450,7 +450,7 @@
             if (voter._isMigrated !== undefined) return voter._isMigrated;
             // দ্রুত এবং সরাসরি ফিল্ড চেক (JSON.stringify এর চেয়ে ১০০ গুণ দ্রুত)
             const text = ((voter.name || '') + ' ' + (voter.fatherName || '') + ' ' + (voter.address || '') + ' ' + (voter.profession || '') + ' ' + (voter.remarks || '') + ' ' + (voter.serialNo || '')).toLowerCase();
-            return text.includes('মাইগ্রেট') || text.includes('মাইগ্রেটেড') || text.includes('কর্তিত');
+            return text.includes('মাইগ্রেট') || text.includes('মাইগ্রেটেড') || text.includes('কর্তিত')|| text.includes('কর্তন করা হয়েছে');
         }
 
         // দ্রুত সার্চ এবং মেমোরি পারফরম্যান্সের জন্য ডাটা একবারে প্রসেস করে ক্যাশ করা
